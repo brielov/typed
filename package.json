@@ -1,0 +1,79 @@
+{
+  "name": "warden",
+  "version": "1.0.0",
+  "description": "Smallest runtime type-checking library ever made",
+  "main": "dist/warden.js",
+  "module": "dist/warden.mjs",
+  "typings": "dist/warden.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rimraf dist && rollup -c",
+    "postinstall": "is-ci || husky install",
+    "postpublish": "pinst --enable",
+    "prepare": "npm run build",
+    "prepublishOnly": "pinst --disable",
+    "test": "jest"
+  },
+  "keywords": [
+    "api",
+    "array",
+    "assert",
+    "check",
+    "checker",
+    "collection",
+    "data",
+    "error",
+    "express",
+    "hapi",
+    "interface",
+    "invalid",
+    "joi",
+    "json",
+    "list",
+    "model",
+    "object",
+    "orm",
+    "scalar",
+    "schema",
+    "type",
+    "types",
+    "valid",
+    "validate",
+    "validation",
+    "validator"
+  ],
+  "license": "MIT",
+  "author": "Gabriel Vaquer <brielov@icloud.com>",
+  "homepage": "https://github.com/brielov/warden#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brielov/warden.git"
+  },
+  "bugs": {
+    "url": "https://github.com/brielov/warden/issues"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.2",
+    "@types/node": "^16.11.3",
+    "@typescript-eslint/eslint-plugin": "^5.1.0",
+    "@typescript-eslint/parser": "^5.1.0",
+    "esbuild": "^0.13.8",
+    "eslint": "^8.0.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^7.0.4",
+    "is-ci": "^3.0.0",
+    "jest": "^27.3.1",
+    "lint-staged": "^11.2.3",
+    "pinst": "^2.1.6",
+    "prettier": "^2.4.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.58.0",
+    "rollup-plugin-dts": "^4.0.0",
+    "rollup-plugin-esbuild": "^4.6.0",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.4.4"
+  }
+}

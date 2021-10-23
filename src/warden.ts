@@ -1,12 +1,12 @@
 import type {
   Enum,
   Err,
-  Guard,
   Infer,
   InferTuple,
   Literal,
   Result,
   Shape,
+  Type,
 } from "./types";
 import {
   failure,
@@ -14,40 +14,40 @@ import {
   mapErrorKey,
   success,
   toError,
-  toPayload,
-  toTypeMessage,
+  toMessage,
+  toResult,
 } from "./util";
 
 /**
  * Check if value is a string
  */
-export const string: Guard<string> = (x) =>
+export const string: Type<string> = (x) =>
   typeof x === "string"
     ? success(x)
-    : failure(toError(toTypeMessage("string", typeof x)));
+    : failure(toError(toMessage("string", typeof x)));
 
 /**
  * Check if value is a number
  */
-export const number: Guard<number> = (x) =>
-  typeof x === "number"
+export const number: Type<number> = (x) =>
+  typeof x === "number" && Number.isFinite(x)
     ? success(x)
-    : failure(toError(toTypeMessage("number", typeof x)));
+    : failure(toError(toMessage("number", typeof x)));
 
 /**
  * Check if value is a boolean
  */
-export const boolean: Guard<boolean> = (x) =>
+export const boolean: Type<boolean> = (x) =>
   typeof x === "boolean"
     ? success(x)
-    : failure(toError(toTypeMessage("boolean", typeof x)));
+    : failure(toError(toMessage("boolean", typeof x)));
 
 /**
  * Check if value is a valid date
  */
-export const date: Guard<Date> = (x) => {
+export const date: Type<Date> = (x) => {
   if (!(x instanceof Date)) {
-    return failure(toError(toTypeMessage("date", typeof x)));
+    return failure(toError(toMessage("date", typeof x)));
   }
 
   if (!Number.isFinite(x.getTime())) {
@@ -61,17 +61,17 @@ export const date: Guard<Date> = (x) => {
  * Check if value is an array of type T
  */
 export const array =
-  <T>(guard: Guard<T>): Guard<T[]> =>
+  <T>(type: Type<T>): Type<T[]> =>
   (x) => {
     if (!Array.isArray(x)) {
-      return failure(toError(toTypeMessage("array", typeof x)));
+      return failure(toError(toMessage("array", typeof x)));
     }
 
     const data: T[] = [];
     const errors: Err[] = [];
 
     for (let i = 0; i < x.length; i++) {
-      const result = guard(x[i]);
+      const result = type(x[i]);
       if (result.success) {
         data[i] = result.data;
       } else {
@@ -79,40 +79,40 @@ export const array =
       }
     }
 
-    return toPayload(data, errors);
+    return toResult(data, errors);
   };
 
 /**
  * Check if value is an object with the specified shape
  */
-export const object = <T extends Shape>(shape: T): Guard<Infer<T>> => {
+export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
   const entries = Object.entries(shape);
 
   return (x) => {
     if (!isPlainObject(x)) {
-      return failure(toError(toTypeMessage("object", typeof x)));
+      return failure(toError(toMessage("object", typeof x)));
     }
 
     const data = Object.create(null);
     const errors: Err[] = [];
 
-    for (const [key, guard] of entries) {
-      const result = guard(x[key]);
+    for (const [prop, type] of entries) {
+      const result = type(x[prop]);
       if (result.success) {
-        data[key] = result.data;
+        data[prop] = result.data;
       } else {
-        errors.push(...mapErrorKey(result.errors, key));
+        errors.push(...mapErrorKey(result.errors, prop));
       }
     }
 
-    return toPayload(data, errors);
+    return toResult(data, errors);
   };
 };
 
 /**
  * Check if value is a literal
  */
-export const literal = <T extends Literal>(constant: T): Guard<T> => {
+export const literal = <T extends Literal>(constant: T): Type<T> => {
   if (
     !(
       typeof constant === "string" ||
@@ -136,22 +136,22 @@ export const literal = <T extends Literal>(constant: T): Guard<T> => {
  * Check if value is of type T or null
  */
 export const nullable =
-  <T>(guard: Guard<T>): Guard<T | null> =>
+  <T>(type: Type<T>): Type<T | null> =>
   (x) =>
-    x === null ? success(x) : guard(x);
+    x === null ? success(x) : type(x);
 
 /**
  * Check if value is of type T or undefined
  */
 export const optional =
-  <T>(guard: Guard<T>): Guard<T | undefined> =>
+  <T>(type: Type<T>): Type<T | undefined> =>
   (x) =>
-    typeof x === "undefined" ? success(x) : guard(x);
+    typeof x === "undefined" ? success(x) : type(x);
 
 /**
  * Check if value is an enum. This function expects a real TypeScript enum type
  */
-export const enums = <T extends Enum>(e: T): Guard<T> => {
+export const enums = <T extends Enum>(e: T): Type<T> => {
   const values = Object.values(e);
   return (x) => {
     if (!values.includes(x as any)) {
@@ -167,18 +167,18 @@ export const enums = <T extends Enum>(e: T): Guard<T> => {
  * Check if value is a tuple
  */
 export const tuple =
-  <A extends Guard, B extends Guard[]>(
-    ...guards: [A, ...B]
-  ): Guard<[Infer<A>, ...InferTuple<B>]> =>
+  <A extends Type, B extends Type[]>(
+    ...types: [A, ...B]
+  ): Type<[Infer<A>, ...InferTuple<B>]> =>
   (x): Result<[Infer<A>, ...InferTuple<B>]> => {
     if (!Array.isArray(x)) {
-      return failure(toError(toTypeMessage("array", typeof x)));
+      return failure(toError(toMessage("array", typeof x)));
     }
 
-    if (x.length < guards.length) {
+    if (x.length < types.length) {
       return failure(
         toError(
-          `Expecting 'array' to have at least '${guards.length}' items on it. Got '${x.length}'`,
+          `Expecting 'array' to have at least '${types.length}' items on it. Got '${x.length}'`,
         ),
       );
     }
@@ -186,8 +186,8 @@ export const tuple =
     const data: any[] = [];
     const errors: Err[] = [];
 
-    for (let i = 0; i < guards.length; i++) {
-      const result = guards[i](x[i]);
+    for (let i = 0; i < types.length; i++) {
+      const result = types[i](x[i]);
       if (result.success) {
         data[i] = result.data;
       } else {
@@ -195,21 +195,21 @@ export const tuple =
       }
     }
 
-    return toPayload(data, errors) as any;
+    return toResult(data, errors) as any;
   };
 
 /**
  * Check if value is any of the specified types
  */
 export const union =
-  <A extends Guard, B extends Guard[]>(
-    ...guards: [A, ...B]
-  ): Guard<Infer<A> | InferTuple<B>[number]> =>
+  <A extends Type, B extends Type[]>(
+    ...types: [A, ...B]
+  ): Type<Infer<A> | InferTuple<B>[number]> =>
   (x): Result<Infer<A> | InferTuple<B>[number]> => {
     const errors: Err[] = [];
 
-    for (const guard of guards) {
-      const result = guard(x);
+    for (const type of types) {
+      const result = type(x);
       if (result.success) {
         return result as any;
       }
@@ -223,22 +223,22 @@ export const union =
  * A passthrough function which returns its input marked as any.
  * Do not use this unless you really need to, it defeats the purpose of this library.
  */
-export const any: Guard<any> = (x): any => success(x);
+export const any: Type<any> = (x): any => success(x);
 
 /**
  * Coerce first, then check if value is a string
  */
-export const asString: Guard<string> = (x) => string(String(x));
+export const asString: Type<string> = (x) => string(String(x));
 
 /**
  * Coerce first, then check if value is a number
  */
-export const asNumber: Guard<number> = (x) => number(Number(x));
+export const asNumber: Type<number> = (x) => number(Number(x));
 
 /**
  * Coerce first, then check if value is a valid date
  */
-export const asDate: Guard<Date> = (x) => {
+export const asDate: Type<Date> = (x) => {
   if (typeof x === "string" || typeof x === "number") {
     x = new Date(x);
   }

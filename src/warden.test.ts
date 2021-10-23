@@ -14,6 +14,7 @@ describe(".string()", () => {
 describe(".number()", () => {
   it("fails when value is not a number", () => {
     expect(G.number("1")).toHaveProperty("success", false);
+    expect(G.number(NaN)).toHaveProperty("success", false);
   });
 
   it("succeeds when value is a number", () => {
@@ -68,7 +69,7 @@ describe(".object()", () => {
     );
   });
 
-  it("succeeds when every guard on shape succeeds", () => {
+  it("succeeds when every type on shape succeeds", () => {
     expect(G.object({ id: G.number })({ id: 1 })).toEqual(success({ id: 1 }));
   });
 
@@ -102,7 +103,7 @@ describe(".nullable()", () => {
     expect(G.nullable(G.string)(null)).toEqual(success(null));
   });
 
-  it("succeeds when guard succeeds", () => {
+  it("succeeds when type succeeds", () => {
     expect(G.nullable(G.string)("")).toEqual(success(""));
   });
 });
@@ -116,7 +117,7 @@ describe(".optional()", () => {
     expect(G.optional(G.string)(undefined)).toEqual(success(undefined));
   });
 
-  it("succeeds when guard succeeds", () => {
+  it("succeeds when type succeeds", () => {
     expect(G.optional(G.string)("")).toEqual(success(""));
   });
 });
@@ -146,7 +147,7 @@ describe(".tuple()", () => {
     expect(G.tuple(G.string, G.number)([""])).toHaveProperty("success", false);
   });
 
-  it("succeeds when all guards succeed", () => {
+  it("succeeds when all types succeed", () => {
     expect(G.tuple(G.string, G.number, G.boolean)(["", 0, false])).toEqual(
       success(["", 0, false]),
     );
@@ -160,11 +161,11 @@ describe(".tuple()", () => {
 });
 
 describe(".union()", () => {
-  it("fails when guard fails", () => {
+  it("fails when type fails", () => {
     expect(G.union(G.number, G.string)(false)).toHaveProperty("success", false);
   });
 
-  it("succeeds when guard succeed", () => {
+  it("succeeds when type succeed", () => {
     expect(G.union(G.number, G.string)("")).toEqual(success(""));
   });
 });

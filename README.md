@@ -30,25 +30,26 @@ if (result.success) {
 
 ## Types
 
-- string
-- number
-- boolean
-- date
-- array
-- object
-- literal
-- nullable
-- optional
-- enums (Real typescript enums only)
-- tuple
-- union
-- any (defeats the purpose, don't use unless necessary)
+- `any: Type<any>` (defeats the purpose, don't use unless necessary)
+- `array<T>(type: Type<T>): Type<T[]>`
+- `boolean: Type<boolean>`
+- `date: Type<Date>`
+- `defaulted<T>(type: Type<T>, fallback: T): Type<T>`
+- `enums<T>(enum: T): Type<T>` (Real typescript enums only)
+- `literal(constant: string | number | boolean | null): Type`
+- `nullable<T>(type: Type<T>): Type<T | null>`
+- `number: Type<number>`
+- `object<T extends Shape>(shape: T): Type<Infer<T>>`
+- `optional<T>(type: Type<T>): Type<T | undefined>`
+- `string: Type<string>`
+- `tuple(...types: Type[]): Type<[...type]>`
+- `union(...types: Type[]): Type<T1 | T2 | ... T3>`
 
 ## Type casting
 
-- asString
-- asNumber
-- asDate
+- `asDate: Type<Date>`
+- `asNumber: Type<number>`
+- `asString: Type<string>`
 
 As you can see, `warden` provides a few type-casting methods for convenience.
 
@@ -57,6 +58,8 @@ const checkPost = G.object({
   id: G.asNumber,
   createdAt: G.asDate,
 });
+
+checkPost({ id: "1", createdAt: "2021-10-23" }); // => { id: 1, createdAt: Date("2021-10-23T00:00:00.000Z") }
 ```
 
 ## Custom validations

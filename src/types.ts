@@ -3,7 +3,7 @@ export type Success<T> = { success: true; data: T };
 export type Failure = { success: false; errors: Err[] };
 export type Result<T> = Success<T> | Failure;
 
-export type Type<T = unknown> = (x: unknown) => Result<T>;
+export type Type<T = unknown> = (input: unknown) => Result<T>;
 export type Shape = { [key: string]: Type };
 
 export type Infer<T> = T extends Shape

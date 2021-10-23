@@ -200,3 +200,17 @@ describe(".asDate()", () => {
     expect(G.asDate(d.toISOString())).toEqual(success(d));
   });
 });
+
+describe(".defaulted()", () => {
+  it("fails when type fails", () => {
+    expect(G.defaulted(G.string, "hello")(1)).toHaveProperty("success", false);
+  });
+
+  it("returns fallback when value is undefined", () => {
+    expect(G.defaulted(G.string, "hello")(void 0)).toEqual(success("hello"));
+  });
+
+  it("returns value when is not undefined", () => {
+    expect(G.defaulted(G.string, "hello")("world")).toEqual(success("world"));
+  });
+});

@@ -226,6 +226,14 @@ export const union =
 export const any: Type<any> = (x): any => success(x);
 
 /**
+ * Returns a default value when input is undefined
+ */
+export const defaulted =
+  <T>(type: Type<T>, fallback: T): Type<T> =>
+  (x) =>
+    typeof x === "undefined" ? success(fallback) : type(x);
+
+/**
  * Coerce first, then check if value is a string
  */
 export const asString: Type<string> = (x) => string(String(x));

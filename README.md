@@ -88,6 +88,7 @@ import * as G from "warden";
 
 const latLng = G.tuple(G.asNumer, G.asNumber);
 
+// It will take a string as an input and it will return `{ lat: number, lng: number }` as an output.
 const coords = G.map(G.string, (value) => {
   const result = latLng(value.split(","));
   if (result.success) {

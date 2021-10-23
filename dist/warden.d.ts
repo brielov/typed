@@ -29,8 +29,17 @@ declare type Enum = {
 declare type InferTuple<Tuple extends Type[], Length extends number = Tuple["length"]> = Length extends Length ? number extends Length ? Tuple : _InferTuple<Tuple, Length, []> : never;
 declare type _InferTuple<Tuple extends Type[], Length extends number, Accumulated extends unknown[], Index extends number = Accumulated["length"]> = Index extends Length ? Accumulated : _InferTuple<Tuple, Length, [...Accumulated, Infer<Tuple[Index]>]>;
 
+/**
+ * Create a new error object
+ */
 declare const toError: (message: string, path?: string[]) => Err;
+/**
+ * Create a typed success result
+ */
 declare const success: <T>(data: T) => Success<T>;
+/**
+ * Create a failure result
+ */
 declare const failure: (...errors: Err[]) => Failure;
 /**
  * Create a new Type that maps an input type to an output type

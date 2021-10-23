@@ -1,26 +1,44 @@
 import type { Err, Failure, Result, Success, Type } from "./types";
 
+/**
+ * Create a commonly used message of missmatching types
+ */
 export const toMessage = (expected: string, actual: string) =>
   `Expecting type '${expected}'. Got type '${actual}'`;
 
+/**
+ * Create a new error object
+ */
 export const toError = (message: string, path: string[] = []): Err => ({
   path,
   message,
 });
 
+/**
+ * Create a typed success result
+ */
 export const success = <T>(data: T): Success<T> => ({
   success: true,
   data,
 });
 
+/**
+ * Create a failure result
+ */
 export const failure = (...errors: Err[]): Failure => ({
   success: false,
   errors,
 });
 
+/**
+ * Create a new result based on wether errors have length or not
+ */
 export const toResult = <T>(data: T, errors: Err[]): Result<T> =>
   errors.length ? failure(...errors) : success(data);
 
+/**
+ * Prepend key to error list
+ */
 export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
   errors.map((err) => toError(err.message, [String(key), ...err.path]));
 

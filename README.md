@@ -116,4 +116,6 @@ const geoStrType = T.map(T.string, (value) => {
     ? geoType({ lat: result.data[0], lng: result.data[1] })
     : result;
 });
+
+const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
 ```

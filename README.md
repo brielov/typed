@@ -9,15 +9,15 @@ There are dozens of validation libraries out there, so why create yet another on
 ## Usage
 
 ```typescript
-import * as G from "warden";
+import * as T from "warden";
 
-const checkPost = G.object({
-  id: G.number,
-  title: G.string,
-  tags: G.array(G.string),
+const postType = T.object({
+  id: T.number,
+  title: T.string,
+  tags: T.array(T.string),
 });
 
-const result = checkPost(/* some JSON data */);
+const result = postType(/* some JSON data */);
 
 if (result.success) {
   // data is available inside this block
@@ -54,12 +54,12 @@ if (result.success) {
 As you can see, `warden` provides a few type-casting methods for convenience.
 
 ```typescript
-const checkPost = G.object({
-  id: G.asNumber,
-  createdAt: G.asDate,
+const postType = T.object({
+  id: T.asNumber,
+  createdAt: T.asDate,
 });
 
-checkPost({ id: "1", createdAt: "2021-10-23" }); // => { id: 1, createdAt: Date("2021-10-23T00:00:00.000Z") }
+postType({ id: "1", createdAt: "2021-10-23" }); // => { id: 1, createdAt: Date("2021-10-23T00:00:00.000Z") }
 ```
 
 ## Custom validations
@@ -67,37 +67,53 @@ checkPost({ id: "1", createdAt: "2021-10-23" }); // => { id: 1, createdAt: Date(
 `warden` allows you to refine types with `map` as you'll see next.
 
 ```typescript
-import * as G from "warden";
+import * as T from "warden";
 import isEmail from "is-email";
 
-const email = G.map(G.string, (value) =>
+const emailType = T.map(T.string, (value) =>
   isEmail(value)
-    ? G.success(value)
-    : G.failure(G.toError(`Expecting value to be a valid 'email'`)),
+    ? T.success(value)
+    : T.failure(T.toError(`Expecting value to be a valid 'email'`)),
 );
 
 // Later in your code
-const checkUser = G.object({
-  id: G.number,
-  name: G.string,
-  email,
+const userType = T.object({
+  id: T.number,
+  name: T.string,
+  email: emailType,
 });
 ```
 
 `map` also allows you to re-shape an input to an output.
 
 ```typescript
-import * as G from "warden";
+import * as T from "./index";
 
-const latLng = G.tuple(G.asNumer, G.asNumber);
+const rangeType = (floor: number, ceiling: number) =>
+  T.map(T.number, (value) => {
+    if (value < floor || value > ceiling) {
+      return T.failure(
+        T.toError(`Expecting value to be between ${floor} and ${ceiling}`),
+      );
+    }
+    return T.success(value);
+  });
+
+const latType = rangeType(-90, 90);
+const lngType = rangeType(-180, 180);
+
+const geoType = T.object({
+  lat: latType,
+  lng: lngType,
+});
+
+const latLngType = T.tuple(T.asNumber, T.asNumber);
 
 // It will take a string as an input and it will return `{ lat: number, lng: number }` as an output.
-const coords = G.map(G.string, (value) => {
-  const result = latLng(value.split(","));
-  if (result.success) {
-    const [lat, lng] = result.data;
-    return G.success({ lat, lng });
-  }
-  return result;
+const geoStrType = T.map(T.string, (value) => {
+  const result = latLngType(value.split(","));
+  return result.success
+    ? geoType({ lat: result.data[0], lng: result.data[1] })
+    : result;
 });
 ```

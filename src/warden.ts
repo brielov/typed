@@ -29,10 +29,17 @@ export const string: Type<string> = (x) =>
 /**
  * Check if value is a number
  */
-export const number: Type<number> = (x) =>
-  typeof x === "number" && Number.isFinite(x)
-    ? success(x)
-    : failure(toError(toMessage("number", typeof x)));
+export const number: Type<number> = (x) => {
+  if (typeof x !== "number") {
+    return failure(toError(toMessage("number", typeof x)));
+  }
+
+  if (!Number.isFinite(x)) {
+    return failure(toError(`Expecting value to be a finite 'number'`));
+  }
+
+  return success(x);
+};
 
 /**
  * Check if value is a boolean
@@ -173,14 +180,6 @@ export const tuple =
   (x): Result<[Infer<A>, ...InferTuple<B>]> => {
     if (!Array.isArray(x)) {
       return failure(toError(toMessage("array", typeof x)));
-    }
-
-    if (x.length < types.length) {
-      return failure(
-        toError(
-          `Expecting 'array' to have at least '${types.length}' items on it. Got '${x.length}'`,
-        ),
-      );
     }
 
     const data: any[] = [];

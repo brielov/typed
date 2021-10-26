@@ -93,7 +93,9 @@ const rangeType = (floor: number, ceiling: number) =>
   T.map(T.number, (value) => {
     if (value < floor || value > ceiling) {
       return T.failure(
-        T.toError(`Expecting value to be between ${floor} and ${ceiling}`),
+        T.toError(
+          `Expecting value to be between '${floor}' and '${ceiling}'. Got '${value}'`,
+        ),
       );
     }
     return T.success(value);
@@ -118,4 +120,20 @@ const geoStrType = T.map(T.string, (value) => {
 });
 
 const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
+```
+
+## Infering Types
+
+Sometimes you may want to infer the type of a validator function. You can do so with the `Infer` type.
+
+```typescript
+import * as T from "warden";
+
+const postType = T.object({
+  id: T.number,
+  title: T.string,
+  tags: T.array(T.string),
+});
+
+type Post = T.Infer<typeof postType>; // => Post = { id: number, title: string, tags: string[] }
 ```

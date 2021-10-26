@@ -29,17 +29,12 @@ export const string: Type<string> = (x) =>
 /**
  * Check if value is a number
  */
-export const number: Type<number> = (x) => {
-  if (typeof x !== "number") {
-    return failure(toError(toMessage("number", typeof x)));
-  }
-
-  if (!Number.isFinite(x)) {
-    return failure(toError(`Expecting value to be a finite 'number'`));
-  }
-
-  return success(x);
-};
+export const number: Type<number> = (x) =>
+  typeof x !== "number"
+    ? failure(toError(toMessage("number", typeof x)))
+    : !Number.isFinite(x)
+    ? failure(toError(`Expecting value to be a finite 'number'`))
+    : success(x);
 
 /**
  * Check if value is a boolean
@@ -52,17 +47,12 @@ export const boolean: Type<boolean> = (x) =>
 /**
  * Check if value is a valid date
  */
-export const date: Type<Date> = (x) => {
-  if (!(x instanceof Date)) {
-    return failure(toError(toMessage("date", typeof x)));
-  }
-
-  if (!Number.isFinite(x.getTime())) {
-    return failure(toError(`Expecting value to be a valid 'date'`));
-  }
-
-  return success(x);
-};
+export const date: Type<Date> = (x) =>
+  !(x instanceof Date)
+    ? failure(toError(toMessage("date", typeof x)))
+    : !Number.isFinite(x.getTime())
+    ? failure(toError(`Expecting value to be a valid 'date'`))
+    : success(x);
 
 /**
  * Check if value is an array of type T
@@ -93,6 +83,7 @@ export const array =
  * Check if value is an object with the specified shape
  */
 export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
+  // Cache shape entries
   const entries = Object.entries(shape);
 
   return (x) => {
@@ -129,7 +120,7 @@ export const literal = <T extends Literal>(constant: T): Type<T> => {
     )
   ) {
     throw new TypeError(
-      `'constant' literal should be of type 'string | number | boolean | null'`,
+      `'constant' literal should be of type 'string | number | boolean | null'. Got '${typeof constant}'`,
     );
   }
 
@@ -159,7 +150,9 @@ export const optional =
  * Check if value is an enum. This function expects a real TypeScript enum type
  */
 export const enums = <T extends Enum>(e: T): Type<T> => {
+  // Cache enum values
   const values = Object.values(e);
+
   return (x) => {
     if (!values.includes(x as any)) {
       return failure(

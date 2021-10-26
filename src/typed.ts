@@ -6,8 +6,8 @@ import type {
   Literal,
   Result,
   Shape,
-  Type,
-} from "./types";
+  Typed,
+} from "./typings";
 import {
   failure,
   isPlainObject,
@@ -21,7 +21,7 @@ import {
 /**
  * Check if value is a string
  */
-export const string: Type<string> = (x) =>
+export const string: Typed<string> = (x) =>
   typeof x === "string"
     ? success(x)
     : failure(toError(toMessage("string", typeof x)));
@@ -29,7 +29,7 @@ export const string: Type<string> = (x) =>
 /**
  * Check if value is a number
  */
-export const number: Type<number> = (x) =>
+export const number: Typed<number> = (x) =>
   typeof x !== "number"
     ? failure(toError(toMessage("number", typeof x)))
     : !Number.isFinite(x)
@@ -39,7 +39,7 @@ export const number: Type<number> = (x) =>
 /**
  * Check if value is a boolean
  */
-export const boolean: Type<boolean> = (x) =>
+export const boolean: Typed<boolean> = (x) =>
   typeof x === "boolean"
     ? success(x)
     : failure(toError(toMessage("boolean", typeof x)));
@@ -47,7 +47,7 @@ export const boolean: Type<boolean> = (x) =>
 /**
  * Check if value is a valid date
  */
-export const date: Type<Date> = (x) =>
+export const date: Typed<Date> = (x) =>
   !(x instanceof Date)
     ? failure(toError(toMessage("date", typeof x)))
     : !Number.isFinite(x.getTime())
@@ -58,7 +58,7 @@ export const date: Type<Date> = (x) =>
  * Check if value is an array of type T
  */
 export const array =
-  <T>(type: Type<T>): Type<T[]> =>
+  <T>(type: Typed<T>): Typed<T[]> =>
   (x) => {
     if (!Array.isArray(x)) {
       return failure(toError(toMessage("array", typeof x)));
@@ -82,7 +82,7 @@ export const array =
 /**
  * Check if value is an object with the specified shape
  */
-export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
+export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
   // Cache shape entries
   const entries = Object.entries(shape);
 
@@ -110,7 +110,7 @@ export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
 /**
  * Check if value is a literal
  */
-export const literal = <T extends Literal>(constant: T): Type<T> => {
+export const literal = <T extends Literal>(constant: T): Typed<T> => {
   if (
     !(
       typeof constant === "string" ||
@@ -134,7 +134,7 @@ export const literal = <T extends Literal>(constant: T): Type<T> => {
  * Check if value is of type T or null
  */
 export const nullable =
-  <T>(type: Type<T>): Type<T | null> =>
+  <T>(type: Typed<T>): Typed<T | null> =>
   (x) =>
     x === null ? success(x) : type(x);
 
@@ -142,14 +142,14 @@ export const nullable =
  * Check if value is of type T or undefined
  */
 export const optional =
-  <T>(type: Type<T>): Type<T | undefined> =>
+  <T>(type: Typed<T>): Typed<T | undefined> =>
   (x) =>
     typeof x === "undefined" ? success(x) : type(x);
 
 /**
  * Check if value is an enum. This function expects a real TypeScript enum type
  */
-export const enums = <T extends Enum>(e: T): Type<T> => {
+export const enums = <T extends Enum>(e: T): Typed<T> => {
   // Cache enum values
   const values = Object.values(e);
 
@@ -167,9 +167,9 @@ export const enums = <T extends Enum>(e: T): Type<T> => {
  * Check if value is a tuple
  */
 export const tuple =
-  <A extends Type, B extends Type[]>(
+  <A extends Typed, B extends Typed[]>(
     ...types: [A, ...B]
-  ): Type<[Infer<A>, ...InferTuple<B>]> =>
+  ): Typed<[Infer<A>, ...InferTuple<B>]> =>
   (x): Result<[Infer<A>, ...InferTuple<B>]> => {
     if (!Array.isArray(x)) {
       return failure(toError(toMessage("array", typeof x)));
@@ -194,9 +194,9 @@ export const tuple =
  * Check if value is any of the specified types
  */
 export const union =
-  <A extends Type, B extends Type[]>(
+  <A extends Typed, B extends Typed[]>(
     ...types: [A, ...B]
-  ): Type<Infer<A> | InferTuple<B>[number]> =>
+  ): Typed<Infer<A> | InferTuple<B>[number]> =>
   (x): Result<Infer<A> | InferTuple<B>[number]> => {
     const errors: Err[] = [];
 
@@ -215,30 +215,30 @@ export const union =
  * A passthrough function which returns its input marked as any.
  * Do not use this unless you really need to, it defeats the purpose of this library.
  */
-export const any: Type<any> = (x): any => success(x);
+export const any: Typed<any> = (x): any => success(x);
 
 /**
  * Returns a default value when input is undefined
  */
 export const defaulted =
-  <T>(type: Type<T>, fallback: T): Type<T> =>
+  <T>(type: Typed<T>, fallback: T): Typed<T> =>
   (x) =>
     typeof x === "undefined" ? success(fallback) : type(x);
 
 /**
  * Coerce first, then check if value is a string
  */
-export const asString: Type<string> = (x) => string(String(x));
+export const asString: Typed<string> = (x) => string(String(x));
 
 /**
  * Coerce first, then check if value is a number
  */
-export const asNumber: Type<number> = (x) => number(Number(x));
+export const asNumber: Typed<number> = (x) => number(Number(x));
 
 /**
  * Coerce first, then check if value is a valid date
  */
-export const asDate: Type<Date> = (x) => {
+export const asDate: Typed<Date> = (x) => {
   if (typeof x === "string" || typeof x === "number") {
     x = new Date(x);
   }

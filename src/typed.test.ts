@@ -1,4 +1,4 @@
-import * as G from "./warden";
+import * as G from "./typed";
 import { success } from "./util";
 
 describe(".string()", () => {

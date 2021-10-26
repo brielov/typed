@@ -1,3 +1,3 @@
-export type { Infer, Type, Result, Success, Failure, Err } from "./types";
+export type { Infer, Typed, Result, Success, Failure, Err } from "./typings";
 export { failure, success, map, toError } from "./util";
-export * from "./warden";
+export * from "./typed";

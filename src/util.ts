@@ -1,4 +1,4 @@
-import type { Err, Failure, Result, Success, Type } from "./types";
+import type { Err, Failure, Result, Success, Typed } from "./typings";
 
 /**
  * Create a commonly used message of missmatching types
@@ -59,7 +59,7 @@ export const isPlainObject = (x: unknown): x is { [key: string]: unknown } => {
  * Create a new Type that maps an input type to an output type
  */
 export const map =
-  <I, O>(type: Type<I>, onSuccess: (value: I) => Result<O>): Type<O> =>
+  <I, O>(type: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
   (x) => {
     const result = type(x);
     return result.success ? onSuccess(result.data) : result;

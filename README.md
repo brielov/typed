@@ -132,7 +132,7 @@ const geoStrType = T.map(T.string, (value) => {
 const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
 ```
 
-## Infering Typeds
+## Inference
 
 Sometimes you may want to infer the type of a validator function. You can do so with the `Infer` type.
 

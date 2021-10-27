@@ -1,11 +1,4 @@
-import {
-  failure,
-  getTypeOf,
-  isPlainObject,
-  success,
-  toError,
-  toMessage,
-} from "./util";
+import { failure, getTypeOf, success, toError, toMessage } from "./util";
 
 const noop = () => {
   return void 0;
@@ -43,19 +36,6 @@ describe(".failure()", () => {
       success: false,
       errors: [toError("hello", ["1"])],
     });
-  });
-});
-
-describe.each([
-  [{}, true],
-  [[], false],
-  [null, false],
-  ["hello", false],
-  [1, false],
-  [true, false],
-])(".isPlainObject(%s)", (value, expected) => {
-  it(`returns ${expected}`, () => {
-    expect(isPlainObject(value)).toEqual(expected);
   });
 });
 

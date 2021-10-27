@@ -47,16 +47,3 @@ export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
  */
 export const getTypeOf = (value: unknown) =>
   Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
-
-/**
- * Borrowed from `superstruct`
- * @see https://github.com/ianstormtaylor/superstruct/blob/28e0b32d5506a7c73e63f7e718b23977e58aac18/src/utils.ts#L24
- */
-export const isPlainObject = (x: unknown): x is { [key: string]: unknown } => {
-  if (getTypeOf(x) !== "object") {
-    return false;
-  }
-
-  const prototype = Object.getPrototypeOf(x);
-  return prototype === null || prototype === Object.prototype;
-};

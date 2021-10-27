@@ -152,8 +152,8 @@ describe(".enums()", () => {
     expect(actual).toEqual(
       failure(
         toError(
-          `Expecting value to be '${Object.values(Role).join(
-            " | ",
+          `Expecting value to be one of '${Object.values(Role).join(
+            ", ",
           )}'. Got 'whatever'`,
         ),
       ),

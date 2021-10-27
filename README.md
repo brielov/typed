@@ -114,7 +114,7 @@ const rangeType = (floor: number, ceiling: number) =>
 const latType = rangeType(-90, 90);
 const lngType = rangeType(-180, 180);
 
-const geoTyped = T.object({
+const geoType = T.object({
   lat: latType,
   lng: lngType,
 });
@@ -125,7 +125,7 @@ const latLngType = T.tuple(T.asNumber, T.asNumber);
 const geoStrType = T.map(T.string, (value) => {
   const result = latLngType(value.split(","));
   return result.success
-    ? geoTyped({ lat: result.value[0], lng: result.value[1] })
+    ? geoType({ lat: result.value[0], lng: result.value[1] })
     : result;
 });
 

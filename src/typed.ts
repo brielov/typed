@@ -19,6 +19,9 @@ import {
   toResult,
 } from "./util";
 
+/**
+ * Check if value is of a given type.
+ */
 const expectType =
   <T extends string>(expected: T): Typed<ExpectType<T>> =>
   (x) => {
@@ -96,7 +99,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
           const result = type(x[prop]);
           return result.success
             ? ([{ ...data, [prop]: result.value }, errors] as any)
-            : [data, errors.concat(...mapErrorKey(result.errors, prop))];
+            : [data, errors.concat(mapErrorKey(result.errors, prop))];
         },
         [{}, []] as [any, Err[]],
       ),
@@ -177,7 +180,7 @@ export const tuple = <A extends Typed, B extends Typed[]>(
             const result = type(x[index]);
             return result.success
               ? [acc.concat(result.value), errors]
-              : [acc, errors.concat(...mapErrorKey(result.errors, index))];
+              : [acc, errors.concat(mapErrorKey(result.errors, index))];
           },
           [[], []] as [any[], Err[]],
         ) as [any[], Err[]]),

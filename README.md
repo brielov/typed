@@ -1,6 +1,12 @@
-# typed
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/brielov/typed/build-test)
+![Codecov](https://img.shields.io/codecov/c/gh/brielov/typed)
+![GitHub issues](https://img.shields.io/github/issues/brielov/typed)
+![GitHub](https://img.shields.io/github/license/brielov/typed)
+![npm bundle size](https://img.shields.io/bundlephobia/minzip/typed)
 
-A blazing fast, dependency free, <1kb runtime type-checking library written entirely in typescript, meant to be used with it.
+# Typed
+
+A blazing fast, dependency free, 1kb runtime type-checking library written entirely in typescript, meant to be used with it.
 
 There are dozens of validation libraries out there, so why create yet another one? Well, I tried almost every library out there and there is only one that I really like called `superstruct` (which is awesome) that provides almost everything that I want, but still, I wanted to create my own. The others are simply bloated or don't provide proper typescript support. So that's where `typed` comes in.
 

@@ -64,3 +64,9 @@ export const map =
     const result = type(x);
     return result.success ? onSuccess(result.data) : result;
   };
+
+/**
+ * Get the type of a value
+ */
+export const getTypeOf = (value: unknown) =>
+  Object.prototype.toString.call(value).slice(8, -1).toLowerCase();

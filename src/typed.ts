@@ -10,6 +10,7 @@ import type {
 } from "./typings";
 import {
   failure,
+  getTypeOf,
   isPlainObject,
   mapErrorKey,
   success,
@@ -24,14 +25,14 @@ import {
 export const string: Typed<string> = (x) =>
   typeof x === "string"
     ? success(x)
-    : failure(toError(toMessage("string", typeof x)));
+    : failure(toError(toMessage("string", getTypeOf(x))));
 
 /**
  * Check if value is a number
  */
 export const number: Typed<number> = (x) =>
   typeof x !== "number"
-    ? failure(toError(toMessage("number", typeof x)))
+    ? failure(toError(toMessage("number", getTypeOf(x))))
     : !Number.isFinite(x)
     ? failure(toError(`Expecting value to be a finite 'number'`))
     : success(x);
@@ -42,14 +43,14 @@ export const number: Typed<number> = (x) =>
 export const boolean: Typed<boolean> = (x) =>
   typeof x === "boolean"
     ? success(x)
-    : failure(toError(toMessage("boolean", typeof x)));
+    : failure(toError(toMessage("boolean", getTypeOf(x))));
 
 /**
  * Check if value is a valid date
  */
 export const date: Typed<Date> = (x) =>
   !(x instanceof Date)
-    ? failure(toError(toMessage("date", typeof x)))
+    ? failure(toError(toMessage("date", getTypeOf(x))))
     : !Number.isFinite(x.getTime())
     ? failure(toError(`Expecting value to be a valid 'date'`))
     : success(x);
@@ -61,7 +62,7 @@ export const array =
   <T>(type: Typed<T>): Typed<T[]> =>
   (x) => {
     if (!Array.isArray(x)) {
-      return failure(toError(toMessage("array", typeof x)));
+      return failure(toError(toMessage("array", getTypeOf(x))));
     }
 
     const data: T[] = [];
@@ -88,7 +89,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
 
   return (x) => {
     if (!isPlainObject(x)) {
-      return failure(toError(toMessage("object", typeof x)));
+      return failure(toError(toMessage("object", getTypeOf(x))));
     }
 
     const data = Object.create(null);
@@ -120,7 +121,9 @@ export const literal = <T extends Literal>(constant: T): Typed<T> => {
     )
   ) {
     throw new TypeError(
-      `'constant' literal should be of type 'string | number | boolean | null'. Got '${typeof constant}'`,
+      `'constant' literal should be of type 'string | number | boolean | null'. Got '${getTypeOf(
+        constant,
+      )}'`,
     );
   }
 
@@ -172,7 +175,7 @@ export const tuple =
   ): Typed<[Infer<A>, ...InferTuple<B>]> =>
   (x): Result<[Infer<A>, ...InferTuple<B>]> => {
     if (!Array.isArray(x)) {
-      return failure(toError(toMessage("array", typeof x)));
+      return failure(toError(toMessage("array", getTypeOf(x))));
     }
 
     const data: any[] = [];

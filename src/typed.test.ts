@@ -1,71 +1,84 @@
 import * as G from "./typed";
-import { success } from "./util";
+import { failure, success, toError, toMessage } from "./util";
 
-describe(".string()", () => {
-  it("fails when value is not a string", () => {
-    expect(G.string(1)).toHaveProperty("success", false);
-  });
-
-  it("succeeds when value is a string", () => {
-    expect(G.string("")).toEqual(success(""));
-  });
-});
-
-describe(".number()", () => {
-  it("fails when value is not a number", () => {
-    expect(G.number("1")).toHaveProperty("success", false);
-    expect(G.number(NaN)).toHaveProperty("success", false);
-  });
-
-  it("succeeds when value is a number", () => {
-    expect(G.number(1)).toEqual(success(1));
+describe.each([
+  ["hello", success("hello")],
+  [1, failure(toError(toMessage("string", "number")))],
+  [true, failure(toError(toMessage("string", "boolean")))],
+  [null, failure(toError(toMessage("string", "null")))],
+])(".string(%s)", (value, expected) => {
+  test(`returns ${expected.success ? "success" : "failure"}`, () => {
+    expect(G.string(value)).toEqual(expected);
   });
 });
 
-describe(".boolean()", () => {
-  it("fails when value is not a boolean", () => {
-    expect(G.boolean("")).toHaveProperty("success", false);
-  });
-
-  it("succeeds when value is a boolean", () => {
-    expect(G.boolean(false)).toEqual(success(false));
+describe.each([
+  [1, success(1)],
+  [NaN, failure(toError(`Expecting value to be a finite 'number'`))],
+  ["hello", failure(toError(toMessage("number", "string")))],
+  [true, failure(toError(toMessage("number", "boolean")))],
+  [null, failure(toError(toMessage("number", "null")))],
+])(".number(%s)", (value, expected) => {
+  test(`returns ${expected.success ? "success" : "failure"}`, () => {
+    expect(G.number(value)).toEqual(expected);
   });
 });
 
-describe(".date()", () => {
-  it("fails when value is not a date", () => {
-    expect(G.date("1")).toHaveProperty("success", false);
+describe.each([
+  [true, success(true)],
+  [false, success(false)],
+  ["hello", failure(toError(toMessage("boolean", "string")))],
+  [1, failure(toError(toMessage("boolean", "number")))],
+  [null, failure(toError(toMessage("boolean", "null")))],
+])(".boolean(%s)", (value, expected) => {
+  test(`returns ${expected.success ? "success" : "failure"}`, () => {
+    expect(G.boolean(value)).toEqual(expected);
   });
+});
 
-  it("succeeds when value is a date", () => {
-    const d = new Date();
-    expect(G.date(d)).toEqual(success(d));
+describe.each([
+  [new Date("2021-10-27"), success(new Date("2021-10-27"))],
+  [
+    new Date("invalid date"),
+    failure(toError(`Expecting value to be a valid 'date'`)),
+  ],
+  ["hello", failure(toError(toMessage("date", "string")))],
+  [1, failure(toError(toMessage("date", "number")))],
+  [null, failure(toError(toMessage("date", "null")))],
+])(".date(%s)", (value, expected) => {
+  test(`returns ${expected.success ? "success" : "failure"}`, () => {
+    expect(G.date(value)).toEqual(expected);
   });
 });
 
 describe(".array()", () => {
   it("fails when value is not an array", () => {
-    expect(G.array(G.string)({})).toHaveProperty("success", false);
+    expect(G.array(G.string)({})).toEqual(
+      failure(toError(toMessage("array", "object"))),
+    );
   });
 
   it("fails when any of the items is not of the specified type", () => {
-    expect(G.array(G.string)([1])).toHaveProperty("success", false);
+    expect(G.array(G.string)([1])).toEqual(
+      failure(toError(toMessage("string", "number"), ["0"])),
+    );
   });
 
   it("succeeds when every item is of the specified type", () => {
-    expect(G.array(G.string)([""])).toEqual(success([""]));
+    expect(G.array(G.number)([1, 2, 3])).toEqual(success([1, 2, 3]));
   });
 });
 
 describe(".object()", () => {
   it("fails when value is not an object", () => {
-    expect(G.object({})([])).toHaveProperty("success", false);
+    expect(G.object({})([])).toEqual(
+      failure(toError(toMessage("object", "array"))),
+    );
   });
 
   it("fails when the value does not conform to the shape", () => {
-    expect(G.object({ id: G.number })({ id: "" })).toHaveProperty(
-      "success",
-      false,
+    expect(G.object({ id: G.number })({ id: "" })).toEqual(
+      failure(toError(toMessage("number", "string"), ["id"])),
     );
   });
 
@@ -86,7 +99,9 @@ describe(".literal()", () => {
   });
 
   it("fails when value is not equal to the constant", () => {
-    expect(G.literal("hello")("hell")).toHaveProperty("success", false);
+    expect(G.literal("hello")("hell")).toEqual(
+      failure(toError(`Expecting literal 'hello'. Got 'hell'`)),
+    );
   });
 
   it("succeeds when value is equal to constant", () => {
@@ -96,7 +111,9 @@ describe(".literal()", () => {
 
 describe(".nullable()", () => {
   it("fails when value is not null", () => {
-    expect(G.nullable(G.string)(undefined)).toHaveProperty("success", false);
+    expect(G.nullable(G.string)(undefined)).toEqual(
+      failure(toError(toMessage("string", "undefined"))),
+    );
   });
 
   it("succeeds when value is null", () => {
@@ -110,7 +127,9 @@ describe(".nullable()", () => {
 
 describe(".optional()", () => {
   it("fails when value is not undefined", () => {
-    expect(G.optional(G.string)(null)).toHaveProperty("success", false);
+    expect(G.optional(G.string)(null)).toEqual(
+      failure(toError(toMessage("string", "null"))),
+    );
   });
 
   it("succeeds when value is undefined", () => {
@@ -130,7 +149,15 @@ describe(".enums()", () => {
 
   it("fails when value is not an enum", () => {
     const actual = G.enums(Role)("whatever");
-    expect(actual).toHaveProperty("success", false);
+    expect(actual).toEqual(
+      failure(
+        toError(
+          `Expecting value to be '${Object.values(Role).join(
+            " | ",
+          )}'. Got 'whatever'`,
+        ),
+      ),
+    );
   });
 
   it("succeeds when value is enum", () => {
@@ -140,11 +167,15 @@ describe(".enums()", () => {
 
 describe(".tuple()", () => {
   it("fails when value is not an array", () => {
-    expect(G.tuple(G.string)({})).toHaveProperty("success", false);
+    expect(G.tuple(G.string)({})).toEqual(
+      failure(toError(toMessage("array", "object"))),
+    );
   });
 
   it("fails when value has less items than tuple", () => {
-    expect(G.tuple(G.string, G.number)([""])).toHaveProperty("success", false);
+    expect(G.tuple(G.string, G.number)([""])).toEqual(
+      failure(toError(toMessage("number", "undefined"), ["1"])),
+    );
   });
 
   it("succeeds when all types succeed", () => {
@@ -162,7 +193,12 @@ describe(".tuple()", () => {
 
 describe(".union()", () => {
   it("fails when type fails", () => {
-    expect(G.union(G.number, G.string)(false)).toHaveProperty("success", false);
+    expect(G.union(G.number, G.string)(false)).toEqual(
+      failure(
+        toError(toMessage("number", "boolean")),
+        toError(toMessage("string", "boolean")),
+      ),
+    );
   });
 
   it("succeeds when type succeed", () => {
@@ -170,17 +206,12 @@ describe(".union()", () => {
   });
 });
 
-describe(".any", () => {
-  it("should always succeed", () => {
-    expect(G.any("")).toEqual(success(""));
-    expect(G.any(1)).toEqual(success(1));
-    expect(G.any(false)).toEqual(success(false));
-    expect(G.any([])).toEqual(success([]));
-    expect(G.any({})).toEqual(success({}));
-    expect(G.any(null)).toEqual(success(null));
-    expect(G.any(undefined)).toEqual(success(undefined));
-  });
-});
+describe.each(["", 1, false, [], {}, null, undefined])(
+  `.any(%s) returns success`,
+  (value) => {
+    expect(G.any(value)).toEqual(success(value));
+  },
+);
 
 describe(".asString()", () => {
   it("coerces value to a string", () => {
@@ -203,7 +234,9 @@ describe(".asDate()", () => {
 
 describe(".defaulted()", () => {
   it("fails when type fails", () => {
-    expect(G.defaulted(G.string, "hello")(1)).toHaveProperty("success", false);
+    expect(G.defaulted(G.string, "hello")(1)).toEqual(
+      failure(toError(toMessage("string", "number"))),
+    );
   });
 
   it("returns fallback when value is undefined", () => {

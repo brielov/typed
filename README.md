@@ -2,6 +2,7 @@
 ![Codecov](https://img.shields.io/codecov/c/gh/brielov/typed)
 ![GitHub issues](https://img.shields.io/github/issues/brielov/typed)
 ![GitHub](https://img.shields.io/github/license/brielov/typed)
+![npm](https://img.shields.io/npm/v/typed)
 ![npm bundle size](https://img.shields.io/bundlephobia/minzip/typed)
 
 # Typed

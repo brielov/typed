@@ -4,7 +4,7 @@ A blazing fast, dependency free, <1kb runtime type-checking library written enti
 
 There are dozens of validation libraries out there, so why create yet another one? Well, I tried almost every library out there and there is only one that I really like called `superstruct` (which is awesome) that provides almost everything that I want, but still, I wanted to create my own. The others are simply bloated or don't provide proper typescript support. So that's where `typed` comes in.
 
-`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Success<T>` or `Failure`. If `success` is `true` then `data` is available and fully typed and if not, `errors` is available with a message and path from where it failed.
+`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Success<T>` or `Failure`. If `success` is `true` then `value` is available and fully typed and if not, `errors` is available with a message and path from where it failed.
 
 ## Install
 
@@ -26,8 +26,8 @@ const postType = T.object({
 const result = postType(/* some JSON data */);
 
 if (result.success) {
-  // data is available inside this block
-  result.data;
+  // value is available inside this block
+  result.value;
 } else {
   // errors is available inside this other block
   result.errors;
@@ -125,7 +125,7 @@ const latLngType = T.tuple(T.asNumber, T.asNumber);
 const geoStrType = T.map(T.string, (value) => {
   const result = latLngType(value.split(","));
   return result.success
-    ? geoTyped({ lat: result.data[0], lng: result.data[1] })
+    ? geoTyped({ lat: result.value[0], lng: result.value[1] })
     : result;
 });
 

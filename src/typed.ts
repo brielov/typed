@@ -7,7 +7,7 @@ import type {
   Result,
   Shape,
   Typed,
-} from "./typings";
+} from "./common";
 import {
   failure,
   getTypeOf,
@@ -71,7 +71,7 @@ export const array =
     for (let i = 0; i < x.length; i++) {
       const result = type(x[i]);
       if (result.success) {
-        data[i] = result.data;
+        data[i] = result.value;
       } else {
         errors.push(...mapErrorKey(result.errors, i));
       }
@@ -98,7 +98,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
     for (const [prop, type] of entries) {
       const result = type(x[prop]);
       if (result.success) {
-        data[prop] = result.data;
+        data[prop] = result.value;
       } else {
         errors.push(...mapErrorKey(result.errors, prop));
       }
@@ -184,7 +184,7 @@ export const tuple =
     for (let i = 0; i < types.length; i++) {
       const result = types[i](x[i]);
       if (result.success) {
-        data[i] = result.data;
+        data[i] = result.value;
       } else {
         errors.push(...mapErrorKey(result.errors, i));
       }
@@ -247,3 +247,13 @@ export const asDate: Typed<Date> = (x) => {
   }
   return date(x);
 };
+
+/**
+ * Create a new Type that maps an input type to an output type
+ */
+export const map =
+  <I, O>(type: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
+  (x) => {
+    const result = type(x);
+    return result.success ? onSuccess(result.value) : result;
+  };

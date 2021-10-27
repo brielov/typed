@@ -1,5 +1,5 @@
 export type Err = { path: string[]; message: string };
-export type Success<T> = { success: true; data: T };
+export type Success<T> = { success: true; value: T };
 export type Failure = { success: false; errors: Err[] };
 export type Result<T> = Success<T> | Failure;
 

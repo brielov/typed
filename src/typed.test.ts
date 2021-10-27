@@ -227,8 +227,9 @@ describe(".asNumber()", () => {
 
 describe(".asDate()", () => {
   it("coerces value to a date", () => {
-    const d = new Date("2021-10-22");
-    expect(G.asDate(d.toISOString())).toEqual(success(d));
+    const date = new Date("2021-10-22");
+    expect(G.asDate(date.toISOString())).toEqual(success(date));
+    expect(G.asDate(date.getTime())).toEqual(success(date));
   });
 });
 
@@ -245,5 +246,17 @@ describe(".defaulted()", () => {
 
   it("returns value when is not undefined", () => {
     expect(G.defaulted(G.string, "hello")("world")).toEqual(success("world"));
+  });
+});
+
+describe(".map()", () => {
+  const t = G.map(G.string, (s) => success(s.toUpperCase()));
+
+  it("fails when input fail", () => {
+    expect(t(1)).toEqual(failure(toError(toMessage("string", "number"))));
+  });
+
+  it("maps input to output", () => {
+    expect(t("hello")).toEqual(success("HELLO"));
   });
 });

@@ -1,4 +1,4 @@
-import type { Err, Failure, Result, Success, Typed } from "./typings";
+import type { Err, Failure, Result, Success } from "./common";
 
 /**
  * Create a commonly used message of missmatching types
@@ -17,9 +17,9 @@ export const toError = (message: string, path: string[] = []): Err => ({
 /**
  * Create a typed success result
  */
-export const success = <T>(data: T): Success<T> => ({
+export const success = <T>(value: T): Success<T> => ({
   success: true,
-  data,
+  value,
 });
 
 /**
@@ -54,16 +54,6 @@ export const isPlainObject = (x: unknown): x is { [key: string]: unknown } => {
   const prototype = Object.getPrototypeOf(x);
   return prototype === null || prototype === Object.prototype;
 };
-
-/**
- * Create a new Type that maps an input type to an output type
- */
-export const map =
-  <I, O>(type: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
-  (x) => {
-    const result = type(x);
-    return result.success ? onSuccess(result.data) : result;
-  };
 
 /**
  * Get the type of a value

@@ -17,7 +17,6 @@
     "test": "jest"
   },
   "keywords": [
-    "api",
     "array",
     "assert",
     "check",
@@ -25,8 +24,7 @@
     "collection",
     "data",
     "error",
-    "express",
-    "hapi",
+    "inference",
     "interface",
     "invalid",
     "joi",
@@ -34,13 +32,12 @@
     "list",
     "model",
     "object",
-    "orm",
-    "scalar",
     "schema",
     "type",
-    "types",
+    "typescript",
     "valid",
     "validate",
+    "validation",
     "validation",
     "validator"
   ],

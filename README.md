@@ -154,3 +154,7 @@ const postType = T.object({
 
 type Post = T.Infer<typeof postType>; // => Post { id: number, title: string, tags: string[] }
 ```
+
+## Demo
+
+![Demo](./demo.gif)

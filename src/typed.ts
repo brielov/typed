@@ -21,6 +21,7 @@ import {
 
 /**
  * Check if value is of a given type.
+ * @since 1.0.0
  */
 const expectType =
   <T extends string>(expected: T): Typed<ExpectType<T>> =>
@@ -33,6 +34,7 @@ const expectType =
 
 /**
  * Create a new Type that maps an input type to an output type
+ * @since 1.0.0
  */
 export const map =
   <I, O>(type: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
@@ -43,11 +45,13 @@ export const map =
 
 /**
  * Check if value is a string
+ * @since 1.0.0
  */
 export const string = expectType("string");
 
 /**
  * Check if value is a number
+ * @since 1.0.0
  */
 export const number = map(expectType("number"), (x) =>
   Number.isFinite(x)
@@ -57,11 +61,13 @@ export const number = map(expectType("number"), (x) =>
 
 /**
  * Check if value is a boolean
+ * @since 1.0.0
  */
 export const boolean = expectType("boolean");
 
 /**
  * Check if value is a valid date
+ * @since 1.0.0
  */
 export const date = map(expectType("date"), (x) =>
   Number.isFinite(x.getTime())
@@ -71,6 +77,7 @@ export const date = map(expectType("date"), (x) =>
 
 /**
  * Check if value is an array of type T
+ * @since 1.0.0
  */
 export const array = <T>(type: Typed<T>) =>
   map(expectType("array"), (x) =>
@@ -89,6 +96,7 @@ export const array = <T>(type: Typed<T>) =>
 
 /**
  * Check if value is an object with the specified shape
+ * @since 1.0.0
  */
 export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
   const entries = Object.entries(shape);
@@ -109,6 +117,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
 
 /**
  * check if value is a literal
+ * @since 1.0.0
  */
 export const literal = <T extends Literal>(constant: T): Typed<T> => {
   if (
@@ -134,6 +143,7 @@ export const literal = <T extends Literal>(constant: T): Typed<T> => {
 
 /**
  * Check if value is of type T or null
+ * @since 1.0.0
  */
 export const nullable =
   <T>(type: Typed<T>): Typed<T | null> =>
@@ -142,6 +152,7 @@ export const nullable =
 
 /**
  * Check if value is of type T or undefined
+ * @since 1.0.0
  */
 export const optional =
   <T>(type: Typed<T>): Typed<T | undefined> =>
@@ -150,6 +161,7 @@ export const optional =
 
 /**
  * Check if value is an enum. This function expects a real TypeScript enum type
+ * @since 1.0.0
  */
 export const enums = <T extends Enum>(e: T): Typed<T> => {
   const values = Object.values(e);
@@ -166,8 +178,8 @@ export const enums = <T extends Enum>(e: T): Typed<T> => {
 
 /**
  * Check if value is a tuple
+ * @since 1.0.0
  */
-
 export const tuple = <A extends Typed, B extends Typed[]>(
   ...types: [A, ...B]
 ): Typed<[Infer<A>, ...InferTuple<B>]> =>
@@ -189,6 +201,7 @@ export const tuple = <A extends Typed, B extends Typed[]>(
 
 /**
  * Check if value is any of the specified types
+ * @since 1.0.0
  */
 export const union =
   <A extends Typed, B extends Typed[]>(
@@ -212,11 +225,13 @@ export const union =
 /**
  * A passthrough function which returns its input marked as any.
  * Do not use this unless you really need to, it defeats the purpose of this library.
+ * @since 1.0.0
  */
 export const any: Typed<any> = (x): any => success(x);
 
 /**
  * Returns a default value when input is undefined
+ * @since 1.0.0
  */
 export const defaulted =
   <T>(type: Typed<T>, fallback: T): Typed<T> =>
@@ -225,16 +240,19 @@ export const defaulted =
 
 /**
  * Coerce first, then check if value is a string
+ * @since 1.0.0
  */
 export const asString: Typed<string> = (x) => string(String(x));
 
 /**
  * Coerce first, then check if value is a number
+ * @since 1.0.0
  */
 export const asNumber: Typed<number> = (x) => number(Number(x));
 
 /**
  * Coerce first, then check if value is a valid date
+ * @since 1.0.0
  */
 export const asDate: Typed<Date> = (x) => {
   if (typeof x === "string" || typeof x === "number") {

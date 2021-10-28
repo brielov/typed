@@ -139,6 +139,49 @@ const geoStrType = T.map(T.string, (value) => {
 const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
 ```
 
+There is another utility function called `fold` which lets you run either a `onLeft` or `onRight` function depending on the result of the validation.
+
+```typescript
+import * as T from "typed";
+
+const userType = T.object({
+  id: T.number,
+  name: T.string,
+});
+
+type UserType = T.Infer<typeof userType>;
+
+const fetcher = (path: string) =>
+  fetch(path)
+    .then((res) => res.json())
+    .then(userType);
+
+const renderErrors = (errors: T.Err[]) => (
+  <ul>
+    {errors.map((err, key) => (
+      <li key={key}>{`${err.message} @ ${err.path.join(".")}`}</li>
+    ))}
+  </ul>
+);
+
+const renderProfile = (user: UserType) => (
+  <div>
+    <h1>{user.name}</h1>
+    <p>{user.id}</p>
+  </div>
+);
+
+const Profile: React.FC = () => {
+  const { data } = useSWR("/api/users", fetcher);
+
+  if (!data) {
+    return <div>Loading...</div>;
+  }
+
+  return T.fold(data, renderErrors, renderProfile);
+};
+```
+
 ## Inference
 
 Sometimes you may want to infer the type of a validator function. You can do so with the `Infer` type.

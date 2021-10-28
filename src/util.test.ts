@@ -1,4 +1,5 @@
-import { failure, getTypeOf, success, toError, toMessage } from "./util";
+import { failure, fold, getTypeOf, success, toError, toMessage } from "./util";
+import { string } from "./typed";
 
 const noop = () => {
   return void 0;
@@ -60,5 +61,25 @@ describe.each([
 ])(".getTypeOf(%s)", (value, expected) => {
   it(`returns ${expected}`, () => {
     expect(getTypeOf(value)).toEqual(expected);
+  });
+});
+
+describe(".fold()", () => {
+  it("returns onLeft when result is not a success", () => {
+    const result = string(null);
+    const onLeft = jest.fn();
+    const onRight = jest.fn();
+    fold(result, onLeft, onRight);
+    expect(onLeft).toHaveBeenCalledTimes(1);
+    expect(onLeft).toHaveBeenCalledWith([toError(toMessage("string", "null"))]);
+  });
+
+  it("returns onRight when result is a success", () => {
+    const result = string("");
+    const onLeft = jest.fn();
+    const onRight = jest.fn();
+    fold(result, onLeft, onRight);
+    expect(onRight).toHaveBeenCalledTimes(1);
+    expect(onRight).toHaveBeenCalledWith("");
   });
 });

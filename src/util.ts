@@ -8,6 +8,7 @@ export const toMessage = (expected: string, actual: string) =>
 
 /**
  * Create a new error object
+ * @since 1.0.0
  */
 export const toError = (message: string, path: string[] = []): Err => ({
   path,
@@ -16,6 +17,7 @@ export const toError = (message: string, path: string[] = []): Err => ({
 
 /**
  * Create a typed success result
+ * @since 1.0.0
  */
 export const success = <T>(value: T): Success<T> => ({
   success: true,
@@ -24,6 +26,7 @@ export const success = <T>(value: T): Success<T> => ({
 
 /**
  * Create a failure result
+ * @since 1.0.0
  */
 export const failure = (...errors: Err[]): Failure => ({
   success: false,
@@ -47,3 +50,13 @@ export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
  */
 export const getTypeOf = (value: unknown) =>
   Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
+
+/**
+ * Fold result into either `onLeft` if it fails or `onRight` if it succeeds.
+ * @since 1.1.0
+ */
+export const fold = <T, L, R>(
+  result: Result<T>,
+  onLeft: (errors: Err[]) => L,
+  onRight: (value: T) => R,
+) => (result.success ? onRight(result.value) : onLeft(result.errors));

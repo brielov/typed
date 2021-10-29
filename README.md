@@ -198,6 +198,30 @@ const postType = T.object({
 type Post = T.Infer<typeof postType>; // => Post { id: number, title: string, tags: string[] }
 ```
 
+## Benchmark
+
+`typed` is around 46% faster than `superstruct` when data is valid and around 63% faster while collecting errors when data is invalid. Benchmarks were done on a Mac Mini (6-core, 3.0 GHz, 8 GB RAM) with Node.js 14.4.0 and TypeScript 4.4.4 using `benny`.
+
+### With valid data
+
+```
+superstruct:
+    3 163 ops/s, ±3.54%   | slowest, 46.57% slower
+
+typed:
+    5 920 ops/s, ±0.24%   | fastest
+```
+
+### With invalid data
+
+```
+  superstruct:
+    2 471 ops/s, ±3.43%   | slowest, 63.38% slower
+
+  typed:
+    6 748 ops/s, ±0.37%   | fastest
+```
+
 ## Demo
 
 ![Demo](./demo.gif)

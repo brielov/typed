@@ -200,26 +200,30 @@ type Post = T.Infer<typeof postType>; // => Post { id: number, title: string, ta
 
 ## Benchmark
 
-`typed` is around 46% faster than `superstruct` when data is valid and around 63% faster while collecting errors when data is invalid. Benchmarks were done on a Mac Mini (6-core, 3.0 GHz, 8 GB RAM) with Node.js 14.4.0 and TypeScript 4.4.4 using `benny`.
-
-### With valid data
+`typed` is around 63% faster than `superstruct` and around 79% faster than `zod` when data is valid. Benchmarks were done on a Mac Mini (6-core, 3.0 GHz, 8 GB RAM) with Node.js 14.4.0 and TypeScript 4.4.4 using `benny`.
 
 ```
-superstruct:
-    3 163 ops/s, ±3.54%   | slowest, 46.57% slower
+  superstruct (valid):
+    3 486 ops/s, ±0.60%   | 63.32% slower
 
-typed:
-    5 920 ops/s, ±0.24%   | fastest
-```
+  zod (valid):
+    1 961 ops/s, ±0.31%   | 79.37% slower
 
-### With invalid data
+  typed (valid):
+    9 505 ops/s, ±0.31%   | fastest
 
-```
-  superstruct:
-    2 471 ops/s, ±3.43%   | slowest, 63.38% slower
+  superstruct (invalid):
+    2 144 ops/s, ±2.68%   | 77.44% slower
 
-  typed:
-    6 748 ops/s, ±0.37%   | fastest
+  zod (invalid):
+    1 250 ops/s, ±1.43%   | slowest, 86.85% slower
+
+  typed (invalid):
+    8 451 ops/s, ±0.23%   | 11.09% slower
+
+Finished 6 cases!
+  Fastest: typed (valid)
+  Slowest: zod (invalid)
 ```
 
 ## Demo

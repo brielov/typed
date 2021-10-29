@@ -43,7 +43,7 @@ export const toResult = <T>(data: T, errors: Err[]): Result<T> =>
  * Prepend key to error list
  */
 export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
-  errors.map((err) => toError(err.message, [String(key)].concat(err.path)));
+  errors.map((err) => toError(err.message, push([String(key)], err.path)));
 
 /**
  * Get the type of a value
@@ -60,3 +60,11 @@ export const fold = <T, L, R>(
   onLeft: (errors: Err[]) => L,
   onRight: (value: T) => R,
 ) => (result.success ? onRight(result.value) : onLeft(result.errors));
+
+/**
+ * This is just a performance hash to `concatenate` two arrays using `push`
+ */
+export const push = <T>(arr: T[], other: T[]): T[] => {
+  arr.push(...other);
+  return arr;
+};

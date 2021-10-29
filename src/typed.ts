@@ -13,6 +13,7 @@ import {
   failure,
   getTypeOf,
   mapErrorKey,
+  push,
   success,
   toError,
   toMessage,
@@ -86,8 +87,8 @@ export const array = <T>(type: Typed<T>) =>
         ([acc, errors], value, index) => {
           const result = type(value);
           return result.success
-            ? ([acc.concat(result.value), errors] as any)
-            : [acc, errors.concat(mapErrorKey(result.errors, index))];
+            ? ([push(acc, [result.value]), errors] as any)
+            : [acc, push(errors, mapErrorKey(result.errors, index))];
         },
         [[], []],
       ) as [T[], Err[]]),
@@ -107,7 +108,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
           const result = type(x[prop]);
           return result.success
             ? ([{ ...data, [prop]: result.value }, errors] as any)
-            : [data, errors.concat(mapErrorKey(result.errors, prop))];
+            : [data, push(errors, mapErrorKey(result.errors, prop))];
         },
         [{}, []] as [any, Err[]],
       ),
@@ -208,7 +209,7 @@ export const union =
     ...types: [A, ...B]
   ): Typed<Infer<A> | InferTuple<B>[number]> =>
   (x): Result<Infer<A> | InferTuple<B>[number]> => {
-    let errors: Err[] = [];
+    const errors: Err[] = [];
 
     // Using a for loop here because we want to stop early if we find a match
     for (const type of types) {
@@ -216,7 +217,7 @@ export const union =
       if (result.success) {
         return result as any;
       }
-      errors = errors.concat(result.errors);
+      errors.push(...result.errors);
     }
 
     return failure(...errors);

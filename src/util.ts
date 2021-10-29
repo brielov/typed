@@ -43,7 +43,7 @@ export const toResult = <T>(data: T, errors: Err[]): Result<T> =>
  * Prepend key to error list
  */
 export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
-  errors.map((err) => toError(err.message, [String(key), ...err.path]));
+  errors.map((err) => toError(err.message, [String(key)].concat(err.path)));
 
 /**
  * Get the type of a value

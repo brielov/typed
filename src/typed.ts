@@ -208,7 +208,7 @@ export const union =
     ...types: [A, ...B]
   ): Typed<Infer<A> | InferTuple<B>[number]> =>
   (x): Result<Infer<A> | InferTuple<B>[number]> => {
-    const errors: Err[] = [];
+    let errors: Err[] = [];
 
     // Using a for loop here because we want to stop early if we find a match
     for (const type of types) {
@@ -216,7 +216,7 @@ export const union =
       if (result.success) {
         return result as any;
       }
-      errors.push(...result.errors);
+      errors = errors.concat(result.errors);
     }
 
     return failure(...errors);
@@ -254,9 +254,5 @@ export const asNumber: Typed<number> = (x) => number(Number(x));
  * Coerce first, then check if value is a valid date
  * @since 1.0.0
  */
-export const asDate: Typed<Date> = (x) => {
-  if (typeof x === "string" || typeof x === "number") {
-    x = new Date(x);
-  }
-  return date(x);
-};
+export const asDate: Typed<Date> = (x) =>
+  date(typeof x === "string" || typeof x === "number" ? new Date(x) : x);

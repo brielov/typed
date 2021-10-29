@@ -1,4 +1,4 @@
-import * as G from "./typed";
+import * as T from "./typed";
 import { failure, success, toError, toMessage } from "./util";
 
 describe.each([
@@ -8,7 +8,7 @@ describe.each([
   [null, failure(toError(toMessage("string", "null")))],
 ])(".string(%s)", (value, expected) => {
   test(`returns ${expected.success ? "success" : "failure"}`, () => {
-    expect(G.string(value)).toEqual(expected);
+    expect(T.string(value)).toEqual(expected);
   });
 });
 
@@ -20,7 +20,7 @@ describe.each([
   [null, failure(toError(toMessage("number", "null")))],
 ])(".number(%s)", (value, expected) => {
   test(`returns ${expected.success ? "success" : "failure"}`, () => {
-    expect(G.number(value)).toEqual(expected);
+    expect(T.number(value)).toEqual(expected);
   });
 });
 
@@ -32,7 +32,7 @@ describe.each([
   [null, failure(toError(toMessage("boolean", "null")))],
 ])(".boolean(%s)", (value, expected) => {
   test(`returns ${expected.success ? "success" : "failure"}`, () => {
-    expect(G.boolean(value)).toEqual(expected);
+    expect(T.boolean(value)).toEqual(expected);
   });
 });
 
@@ -47,47 +47,47 @@ describe.each([
   [null, failure(toError(toMessage("date", "null")))],
 ])(".date(%s)", (value, expected) => {
   test(`returns ${expected.success ? "success" : "failure"}`, () => {
-    expect(G.date(value)).toEqual(expected);
+    expect(T.date(value)).toEqual(expected);
   });
 });
 
 describe(".array()", () => {
   it("fails when value is not an array", () => {
-    expect(G.array(G.string)({})).toEqual(
+    expect(T.array(T.string)({})).toEqual(
       failure(toError(toMessage("array", "object"))),
     );
   });
 
   it("fails when any of the items is not of the specified type", () => {
-    expect(G.array(G.string)([1])).toEqual(
+    expect(T.array(T.string)([1])).toEqual(
       failure(toError(toMessage("string", "number"), ["0"])),
     );
   });
 
   it("succeeds when every item is of the specified type", () => {
-    expect(G.array(G.number)([1, 2, 3])).toEqual(success([1, 2, 3]));
+    expect(T.array(T.number)([1, 2, 3])).toEqual(success([1, 2, 3]));
   });
 });
 
 describe(".object()", () => {
   it("fails when value is not an object", () => {
-    expect(G.object({})([])).toEqual(
+    expect(T.object({})([])).toEqual(
       failure(toError(toMessage("object", "array"))),
     );
   });
 
   it("fails when the value does not conform to the shape", () => {
-    expect(G.object({ id: G.number })({ id: "" })).toEqual(
+    expect(T.object({ id: T.number })({ id: "" })).toEqual(
       failure(toError(toMessage("number", "string"), ["id"])),
     );
   });
 
   it("succeeds when every type on shape succeeds", () => {
-    expect(G.object({ id: G.number })({ id: 1 })).toEqual(success({ id: 1 }));
+    expect(T.object({ id: T.number })({ id: 1 })).toEqual(success({ id: 1 }));
   });
 
   it("removes all properties that are not on the shape", () => {
-    expect(G.object({ id: G.number })({ id: 1, name: "John" })).toEqual(
+    expect(T.object({ id: T.number })({ id: 1, name: "John" })).toEqual(
       success({ id: 1 }),
     );
   });
@@ -95,49 +95,49 @@ describe(".object()", () => {
 
 describe(".literal()", () => {
   it("throws an error when constant is not a valid literal", () => {
-    expect(() => G.literal({} as any)).toThrow(TypeError);
+    expect(() => T.literal({} as any)).toThrow(TypeError);
   });
 
   it("fails when value is not equal to the constant", () => {
-    expect(G.literal("hello")("hell")).toEqual(
+    expect(T.literal("hello")("hell")).toEqual(
       failure(toError(`Expecting literal 'hello'. Got 'hell'`)),
     );
   });
 
   it("succeeds when value is equal to constant", () => {
-    expect(G.literal("hello")("hello")).toEqual(success("hello"));
+    expect(T.literal("hello")("hello")).toEqual(success("hello"));
   });
 });
 
 describe(".nullable()", () => {
   it("fails when value is not null", () => {
-    expect(G.nullable(G.string)(undefined)).toEqual(
+    expect(T.nullable(T.string)(undefined)).toEqual(
       failure(toError(toMessage("string", "undefined"))),
     );
   });
 
   it("succeeds when value is null", () => {
-    expect(G.nullable(G.string)(null)).toEqual(success(null));
+    expect(T.nullable(T.string)(null)).toEqual(success(null));
   });
 
   it("succeeds when type succeeds", () => {
-    expect(G.nullable(G.string)("")).toEqual(success(""));
+    expect(T.nullable(T.string)("")).toEqual(success(""));
   });
 });
 
 describe(".optional()", () => {
   it("fails when value is not undefined", () => {
-    expect(G.optional(G.string)(null)).toEqual(
+    expect(T.optional(T.string)(null)).toEqual(
       failure(toError(toMessage("string", "null"))),
     );
   });
 
   it("succeeds when value is undefined", () => {
-    expect(G.optional(G.string)(undefined)).toEqual(success(undefined));
+    expect(T.optional(T.string)(undefined)).toEqual(success(undefined));
   });
 
   it("succeeds when type succeeds", () => {
-    expect(G.optional(G.string)("")).toEqual(success(""));
+    expect(T.optional(T.string)("")).toEqual(success(""));
   });
 });
 
@@ -148,7 +148,7 @@ describe(".enums()", () => {
   }
 
   it("fails when value is not an enum", () => {
-    const actual = G.enums(Role)("whatever");
+    const actual = T.enums(Role)("whatever");
     expect(actual).toEqual(
       failure(
         toError(
@@ -161,31 +161,31 @@ describe(".enums()", () => {
   });
 
   it("succeeds when value is enum", () => {
-    expect(G.enums(Role)(Role.admin)).toEqual(success(Role.admin));
+    expect(T.enums(Role)(Role.admin)).toEqual(success(Role.admin));
   });
 });
 
 describe(".tuple()", () => {
   it("fails when value is not an array", () => {
-    expect(G.tuple(G.string)({})).toEqual(
+    expect(T.tuple(T.string)({})).toEqual(
       failure(toError(toMessage("array", "object"))),
     );
   });
 
   it("fails when value has less items than tuple", () => {
-    expect(G.tuple(G.string, G.number)([""])).toEqual(
+    expect(T.tuple(T.string, T.number)([""])).toEqual(
       failure(toError(toMessage("number", "undefined"), ["1"])),
     );
   });
 
   it("succeeds when all types succeed", () => {
-    expect(G.tuple(G.string, G.number, G.boolean)(["", 0, false])).toEqual(
+    expect(T.tuple(T.string, T.number, T.boolean)(["", 0, false])).toEqual(
       success(["", 0, false]),
     );
   });
 
   it("removes extra items", () => {
-    expect(G.tuple(G.string, G.number)(["", 0, false])).toEqual(
+    expect(T.tuple(T.string, T.number)(["", 0, false])).toEqual(
       success(["", 0]),
     );
   });
@@ -193,7 +193,7 @@ describe(".tuple()", () => {
 
 describe(".union()", () => {
   it("fails when type fails", () => {
-    expect(G.union(G.number, G.string)(false)).toEqual(
+    expect(T.union(T.number, T.string)(false)).toEqual(
       failure(
         toError(toMessage("number", "boolean")),
         toError(toMessage("string", "boolean")),
@@ -202,55 +202,61 @@ describe(".union()", () => {
   });
 
   it("succeeds when type succeed", () => {
-    expect(G.union(G.number, G.string)("")).toEqual(success(""));
+    expect(T.union(T.number, T.string)("")).toEqual(success(""));
   });
 });
 
 describe.each(["", 1, false, [], {}, null, undefined])(
   `.any(%s) returns success`,
   (value) => {
-    expect(G.any(value)).toEqual(success(value));
+    expect(T.any(value)).toEqual(success(value));
   },
 );
 
 describe(".asString()", () => {
   it("coerces value to a string", () => {
-    expect(G.asString(1)).toEqual(success("1"));
+    expect(T.asString(1)).toEqual(success("1"));
   });
 });
 
 describe(".asNumber()", () => {
   it("coerces value to a number", () => {
-    expect(G.asNumber("1")).toEqual(success(1));
+    expect(T.asNumber("1")).toEqual(success(1));
   });
 });
 
 describe(".asDate()", () => {
   it("coerces value to a date", () => {
     const date = new Date("2021-10-22");
-    expect(G.asDate(date.toISOString())).toEqual(success(date));
-    expect(G.asDate(date.getTime())).toEqual(success(date));
+    expect(T.asDate(date.toISOString())).toEqual(success(date));
+    expect(T.asDate(date.getTime())).toEqual(success(date));
+  });
+
+  it("returns failure when cohercion fails", () => {
+    expect(T.asDate(false)).toEqual(
+      failure(toError(toMessage("date", "boolean"))),
+    );
   });
 });
 
 describe(".defaulted()", () => {
   it("fails when type fails", () => {
-    expect(G.defaulted(G.string, "hello")(1)).toEqual(
+    expect(T.defaulted(T.string, "hello")(1)).toEqual(
       failure(toError(toMessage("string", "number"))),
     );
   });
 
   it("returns fallback when value is undefined", () => {
-    expect(G.defaulted(G.string, "hello")(void 0)).toEqual(success("hello"));
+    expect(T.defaulted(T.string, "hello")(void 0)).toEqual(success("hello"));
   });
 
   it("returns value when is not undefined", () => {
-    expect(G.defaulted(G.string, "hello")("world")).toEqual(success("world"));
+    expect(T.defaulted(T.string, "hello")("world")).toEqual(success("world"));
   });
 });
 
 describe(".map()", () => {
-  const t = G.map(G.string, (s) => success(s.toUpperCase()));
+  const t = T.map(T.string, (s) => success(s.toUpperCase()));
 
   it("fails when input fail", () => {
     expect(t(1)).toEqual(failure(toError(toMessage("string", "number"))));

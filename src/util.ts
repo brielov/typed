@@ -62,7 +62,7 @@ export const fold = <T, L, R>(
 ) => (result.success ? onRight(result.value) : onLeft(result.errors));
 
 /**
- * This is just a performance hash to `concatenate` two arrays using `push`
+ * This is just a performance hack to `concatenate` two arrays using `push`
  */
 export const push = <T>(arr: T[], other: T[]): T[] => {
   arr.push(...other);

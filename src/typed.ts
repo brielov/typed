@@ -164,11 +164,11 @@ export const optional =
  * Check if value is an enum. This function expects a real TypeScript enum type
  * @since 1.0.0
  */
-export const enums = <T extends Enum>(e: T): Typed<T> => {
+export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
   const values = Object.values(e);
   return (x) => {
     return values.includes(x as any)
-      ? success(x as T)
+      ? success(x as T[K])
       : failure(
           toError(
             `Expecting value to be one of '${values.join(", ")}'. Got '${x}'`,

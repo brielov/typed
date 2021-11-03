@@ -189,6 +189,16 @@ describe(".tuple()", () => {
       success(["", 0]),
     );
   });
+
+  it("can be tuple in tuple", () => {
+    expect(
+      T.tuple(
+        T.tuple(T.number, T.number),
+        T.string,
+        T.boolean,
+      )([[1, 2], "hello", true]),
+    ).toEqual(success([[1, 2], "hello", true]));
+  });
 });
 
 describe(".union()", () => {

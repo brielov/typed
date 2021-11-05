@@ -19,6 +19,12 @@ There are dozens of validation libraries out there, so why create yet another on
 npm install typed
 ```
 
+Or to use it directly in the browser as ES module:
+
+```typescript
+import * as T from "https://unpkg.com/typed@latest/dist/typed.mjs?module";
+```
+
 ## Usage
 
 ```typescript
@@ -141,7 +147,7 @@ const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, ln
 
 There is another utility function called `fold` which lets you run either a `onLeft` or `onRight` function depending on the result of the validation.
 
-```typescript
+```tsx
 import * as T from "typed";
 
 const userType = T.object({
@@ -229,3 +235,12 @@ Finished 6 cases!
 ## Demo
 
 ![Demo](./demo.gif)
+
+## A note about speed
+
+There are a few libraries out there bragging about being 60x faster than this or that library. While that might be true, they are often also 60x bigger.
+Every library has its pros and cons and which one you choose will depend on the context. If you are on a server-side environment, size may not be your primary concern (although deploy times do matter). If you are on a client-side environment though, size should definitely be a concern.
+
+Take [suretype](https://github.com/grantila/suretype) as an example: It is fast as fuck but it also adds `225kb` to your bundle size. If you had to download that many bytes while on 3G, by the time your browser downloads, parses, compiles and executes your code, `typed`, `superstruct` or any other of the kind, should have been done making the actuall http request to the server, parsed some JSON, validated the data and still have some time left to do something else (even on the server-side). Memory usage is something to keep in mind too (low powered devices would definitely feel the impact, like a raspberry pi or a low end phone).
+
+![Compare](./compare.png)

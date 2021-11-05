@@ -192,7 +192,7 @@ export const tuple = <A extends Typed, B extends Typed[]>(
           ([acc, errors], type, index) => {
             const result = type(x[index]);
             return result.success
-              ? [[...acc, result.value], errors]
+              ? [push(acc, [result.value]), errors]
               : [acc, errors.concat(mapErrorKey(result.errors, index))];
           },
           [[], []] as [any[], Err[]],

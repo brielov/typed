@@ -94,10 +94,6 @@ describe(".object()", () => {
 });
 
 describe(".literal()", () => {
-  it("throws an error when constant is not a valid literal", () => {
-    expect(() => T.literal({} as any)).toThrow(TypeError);
-  });
-
   it("fails when value is not equal to the constant", () => {
     expect(T.literal("hello")("hell")).toEqual(
       failure(toError(`Expecting literal 'hello'. Got 'hell'`)),

@@ -12,20 +12,6 @@ export type Infer<T> = T extends Shape
   ? U
   : never;
 
-export type ExpectType<T> = T extends "string"
-  ? string
-  : T extends "number"
-  ? number
-  : T extends "boolean"
-  ? boolean
-  : T extends "date"
-  ? Date
-  : T extends "object"
-  ? { [key: string]: unknown }
-  : T extends "array"
-  ? unknown[]
-  : never;
-
 export type Literal = string | number | boolean | null;
 export type Enum = { [key: string]: string | number };
 

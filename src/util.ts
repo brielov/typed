@@ -43,7 +43,7 @@ export const toResult = <T>(data: T, errors: Err[]): Result<T> =>
  * Prepend key to error list
  */
 export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
-  errors.map((err) => toError(err.message, push([String(key)], err.path)));
+  errors.map((err) => toError(err.message, [String(key), ...err.path]));
 
 /**
  * Get the type of a value
@@ -62,9 +62,9 @@ export const fold = <T, L, R>(
 ) => (result.success ? onRight(result.value) : onLeft(result.errors));
 
 /**
- * This is just a performance hack to `concatenate` two arrays using `push`
+ * Check if value is plain object
  */
-export const push = <T>(arr: T[], other: T[]): T[] => {
-  arr.push(...other);
-  return arr;
-};
+export const isPlainObject = (
+  value: unknown,
+): value is { [key: string]: unknown } =>
+  value !== null && typeof value === "object" && !Array.isArray(value);

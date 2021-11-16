@@ -204,6 +204,13 @@ const postType = T.object({
 type Post = T.Infer<typeof postType>; // => Post { id: number, title: string, tags: string[] }
 ```
 
+## Addons
+
+Because I use `typed` mostly on the server to cast and validate incoming data, I've created some addons to make some tasks easier and less repetitive, like normalizing emails and validating passwords. A `typed-extras` may be coming soon with a collection of commonly used data structures and validations.
+
+- [typed-email](https://github.com/brielov/typed-email)
+- [typed-password](https://github.com/brielov/typed-password)
+
 ## Benchmarks
 
 ```

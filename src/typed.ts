@@ -20,18 +20,36 @@ import {
 } from "./util";
 
 /**
- * Create a new Type that maps an input type to an output type
+ * Creates a new type from a given base type.
+ * It ensures that the base type passes validation before carrying on.
+ *
+ * @example
+ * ```ts
+ * const emailType = T.map(T.string, (value) =>
+ *  EMAIL_REGEX.test(value)
+ *    ? T.success(value)
+ *    : T.failure(T.toError('Expecting string to be a valid email address'))
+ * )
+ * ```
+ *
+ * @template I, O
+ * @param {Typed<I>} base - The base type.
+ * @param {(value: I) => Result<O, Err>} onSuccess - The mapping function.
+ * @returns {Typed<O>}
  * @since 1.0.0
  */
 export const map =
-  <I, O>(type: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
+  <I, O>(base: Typed<I>, onSuccess: (value: I) => Result<O>): Typed<O> =>
   (x) => {
-    const result = type(x);
+    const result = base(x);
     return result.success ? onSuccess(result.value) : result;
   };
 
 /**
- * Check if value is a string
+ * Check wether a given value is of type string.
+ *
+ * @param {*} value - The value to check.
+ * @returns {Result<string>}
  * @since 1.0.0
  */
 export const string: Typed<string> = (x) =>
@@ -40,7 +58,11 @@ export const string: Typed<string> = (x) =>
     : failure(toError(toMessage("string", getTypeOf(x))));
 
 /**
- * Check if value is a number
+ * Check wether a given value is of type number.
+ * It also makes sure that the value is a finite number.
+ *
+ * @param {*} value - The value to check.
+ * @returns {Result<number>}
  * @since 1.0.0
  */
 export const number: Typed<number> = (x) =>
@@ -51,7 +73,10 @@ export const number: Typed<number> = (x) =>
     : failure(toError(toMessage("number", getTypeOf(x))));
 
 /**
- * Check if value is a boolean
+ * Check wether a given value is of type boolean.
+ *
+ * @param {*} value - The value to check.
+ * @returns {Result<boolean>}
  * @since 1.0.0
  */
 export const boolean: Typed<boolean> = (x) =>
@@ -60,7 +85,11 @@ export const boolean: Typed<boolean> = (x) =>
     : failure(toError(toMessage("boolean", getTypeOf(x))));
 
 /**
- * Check if value is a valid date
+ * Check weather a given value is of type Date.
+ * It also makes sure that the value is a valid date.
+ *
+ * @param {*} value - The value to check.
+ * @returns {Result<Date>}
  * @since 1.0.0
  */
 export const date: Typed<Date> = (x) =>
@@ -71,7 +100,19 @@ export const date: Typed<Date> = (x) =>
     : failure(toError(toMessage("date", getTypeOf(x))));
 
 /**
- * Check if value is an array of type T
+ * Creates a new typed function from a given base type.
+ * It ensures that value is an array and every item is of base type.
+ *
+ * @example
+ * ```ts
+ * const arrayOfStrings = T.array(T.string)
+ * arrayOfStrings(['hello', 'world']) // success
+ * arrayOfStrings(['hello', 123]) // failure
+ * ```
+ *
+ * @template T
+ * @param {Typed<T>} type - The type that every item should be of.
+ * @returns {Typed<T[]>}
  * @since 1.0.0
  */
 export const array =
@@ -94,7 +135,23 @@ export const array =
   };
 
 /**
- * Check if value is an object with the specified shape
+ * Creates a new typed function from a given shape.
+ * The shape can be as deep as needed.
+ *
+ * @example
+ * ```ts
+ * const postType = T.object({
+ *   title: T.string,
+ *   body: T.string,
+ *   tags: T.array(T.string),
+ *   author: T.object({
+ *     name: T.string,
+ *   })
+ * })
+ * ```
+ *
+ * @param {Shape} shape - The shape to check.
+ * @returns {Typed<Infer<Shape>>}
  * @since 1.0.0
  */
 export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
@@ -118,7 +175,19 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
 };
 
 /**
- * check if value is a literal
+ * Creates a new typed function from a given constant.
+ * It ensures that the value is equal to the given constant.
+ *
+ * @example
+ * ```ts
+ * const constant = T.literal('hello')
+ * constant('hello') // success
+ * constant('world') // failure
+ * ```
+ *
+ * @template T
+ * @param {*} value - The constant to check.
+ * @returns {Typed<T>}
  * @since 1.0.0
  */
 export const literal =
@@ -129,7 +198,19 @@ export const literal =
       : failure(toError(`Expecting literal '${constant}'. Got '${x}'`));
 
 /**
- * Check if value is of type T or null
+ * Creates a new typed function from a given type that will succeed if the value is null.
+ *
+ * @example
+ * ```ts
+ * const nullable = T.nullable(T.string)
+ * nullable(null) // success
+ * nullable('hello') // success
+ * nullable(123) // failure
+ * ```
+ *
+ * @template T
+ * @param {Typed<T>} type - The type to check.
+ * @returns {Typed<T | null>}
  * @since 1.0.0
  */
 export const nullable =
@@ -138,7 +219,19 @@ export const nullable =
     x === null ? success(x) : type(x);
 
 /**
- * Check if value is of type T or undefined
+ * Creates a new typed function from a given type that will succeed if the value is undefined.
+ *
+ * @example
+ * ```ts
+ * const optional = T.optional(T.string)
+ * optional(undefined) // success
+ * optional('hello') // success
+ * optional(123) // failure
+ * ```
+ *
+ * @template T
+ * @param {Typed<T>} type - The type to check.
+ * @returns {Typed<T | undefined>}
  * @since 1.0.0
  */
 export const optional =
@@ -147,7 +240,24 @@ export const optional =
     typeof x === "undefined" ? success(x) : type(x);
 
 /**
- * Check if value is an enum. This function expects a real TypeScript enum type
+ * Creates a new typed function from a given TypeScript Enum.
+ *
+ * @example
+ * ```ts
+ * enum Role {
+ *   ADMIN,
+ *   USER,
+ * }
+ *
+ * const role = T.enums(Role)
+ * role(Role.ADMIN) // success
+ * role(Role.USER) // success
+ * role(Role.GUEST) // failure
+ * ```
+ *
+ * @template T, K
+ * @param {Enum} enumType - The enum to check.
+ * @returns {Typed<T[K]>}
  * @since 1.0.0
  */
 export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
@@ -164,7 +274,19 @@ export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
 };
 
 /**
- * Check if value is a tuple
+ * Creates a new typed function from a list of types.
+ * A tuple is like a fixed length array and every item should be of the specified type.
+ *
+ * @example
+ * ```ts
+ * const tuple = T.tuple(T.string, T.number)
+ * tuple(['hello', 123]) // success
+ * tuple(['hello', 'world']) // failure
+ * ```
+ *
+ * @template A, B
+ * @param {Typed, ...Typed[]}
+ * @returns {Typed<[Infer<A>, ...InferTuple<B>]>}
  * @since 1.0.0
  */
 export const tuple =
@@ -192,7 +314,20 @@ export const tuple =
   };
 
 /**
- * Check if value is any of the specified types
+ * Creates a new typed function from a list of types.
+ * This function will succeed if the value is any of the given types.
+ *
+ * @example
+ * ```ts
+ * const anyOf = T.union(T.string, T.number, T.boolean)
+ * anyOf('hello') // success
+ * anyOf(123) // success
+ * anyOf(true) // success
+ * anyOf(null) // failure
+ * ```
+ * @template A, B
+ * @param {Typed, ...Typed[]}
+ * @returns {Typed<Infer<A> | ...InferTuple<B>[number]}
  * @since 1.0.0
  */
 export const union =
@@ -221,7 +356,20 @@ export const union =
 export const any: Typed<any> = (x): any => success(x);
 
 /**
- * Returns a default value when input is undefined
+ * Creates a new typed function from a given type that will return a fallback if the value is undefined.
+ *
+ * @example
+ * ```ts
+ * const withFallback = T.defaulted(T.number, 0)
+ * withFallback(undefined) // success(0)
+ * withFallback(123) // success(123)
+ * withFallback('hello') // failure
+ * ```
+ *
+ * @template T
+ * @param {Typed<T>} type - The type to check.
+ * @param {T} fallback - The fallback value.
+ * @returns {Typed<T>}
  * @since 1.0.0
  */
 export const defaulted =
@@ -230,19 +378,23 @@ export const defaulted =
     typeof x === "undefined" ? success(fallback) : type(x);
 
 /**
- * Coerce first, then check if value is a string
+ * Coerce first, then check if value is a string.
+ *
+ * @returns {Typed<string>}
  * @since 1.0.0
  */
 export const asString: Typed<string> = (x) => string(String(x));
 
 /**
- * Coerce first, then check if value is a number
+ * Coerce first, then check if value is a number.
+ * @returns {Typed<number>}
  * @since 1.0.0
  */
 export const asNumber: Typed<number> = (x) => number(Number(x));
 
 /**
- * Coerce first, then check if value is a valid date
+ * Coerce first, then check if value is a valid date.
+ * @returns {Typed<Date>}
  * @since 1.0.0
  */
 export const asDate: Typed<Date> = (x) =>

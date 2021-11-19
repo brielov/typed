@@ -9,8 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "benchmark": "npm run build && node benchmark.js",
     "build": "rimraf dist && rollup -c",
+    "docs": "typedoc src/index.ts",
     "postinstall": "is-ci || husky install",
     "postpublish": "pinst --enable",
     "prepare": "npm run build",
@@ -53,30 +53,26 @@
     "url": "https://github.com/brielov/typed/issues"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.2",
-    "@types/node": "^16.11.6",
-    "@types/node-fetch": "^2.5.12",
-    "@typescript-eslint/eslint-plugin": "^5.2.0",
-    "@typescript-eslint/parser": "^5.2.0",
-    "benny": "^3.7.1",
-    "esbuild": "^0.13.9",
-    "eslint": "^8.1.0",
+    "@types/jest": "^27.0.3",
+    "@types/node": "^16.11.9",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "esbuild": "^0.13.14",
+    "eslint": "^8.2.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^7.0.4",
     "is-ci": "^3.0.1",
     "jest": "^27.3.1",
-    "lint-staged": "^11.2.5",
-    "node-fetch": "^2.6.6",
+    "lint-staged": "^12.0.3",
     "pinst": "^2.1.6",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.58.3",
-    "rollup-plugin-dts": "^4.0.0",
-    "rollup-plugin-esbuild": "^4.6.0",
-    "superstruct": "^0.15.3",
+    "rollup": "^2.60.0",
+    "rollup-plugin-dts": "^4.0.1",
+    "rollup-plugin-esbuild": "^4.7.2",
     "ts-jest": "^27.0.7",
-    "typescript": "^4.4.4",
-    "zod": "^3.11.6"
+    "typedoc": "^0.22.9",
+    "typescript": "^4.5.2"
   }
 }

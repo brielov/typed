@@ -21,6 +21,8 @@ npm install typed
 
 ## Usage
 
+**You can check out the API docs [here](https://typed.pages.dev)**
+
 ```typescript
 import * as T from "typed";
 

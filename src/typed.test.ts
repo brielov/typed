@@ -212,6 +212,30 @@ describe(".union()", () => {
   });
 });
 
+describe(".intersection()", () => {
+  const a = T.object({ a: T.string });
+  const b = T.object({ b: T.number });
+
+  it("fails when type fails", () => {
+    expect(T.intersection(a, b)({ a: "hello" })).toEqual(
+      failure(toError(toMessage("number", "undefined"), ["b"])),
+    );
+  });
+
+  it("succeeds when every type succeed", () => {
+    expect(T.intersection(a, b)({ a: "hello", b: 10 })).toEqual(
+      success({ a: "hello", b: 10 }),
+    );
+  });
+
+  it("handles optional values", () => {
+    const c = T.object({ c: T.optional(T.boolean) });
+    expect(T.intersection(a, b, c)({ a: "hello", b: 10 })).toEqual(
+      success({ a: "hello", b: 10 }),
+    );
+  });
+});
+
 describe.each(["", 1, false, [], {}, null, undefined])(
   `.any(%s) returns success`,
   (value) => {

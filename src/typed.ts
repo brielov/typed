@@ -4,9 +4,11 @@ import type {
   Infer,
   InferTuple,
   Literal,
+  PlainObject,
   Result,
   Shape,
   Typed,
+  UnionToIntersection,
 } from "./common";
 import {
   failure,
@@ -346,6 +348,44 @@ export const union =
     }
 
     return failure(...errors);
+  };
+
+/**
+ * Creates a new typed function which combines multiple types into one.
+ *
+ * @example
+ * ```ts
+ * const a = T.object({ name: T.string  })
+ * const b = T.object({ age: T.number})
+ * const c = T.intersection(a, b)
+ *
+ * c({ name: 'hello', age: 123 }) // success
+ * c({ name: 'hello', age: 'world' }) // failure
+ * c({name: 'hello'}) // failure
+ * ```
+ * @template A, B
+ * @param {Typed, ...Typed[]}
+ * @returns {Typed<Infer<A> & UnionToIntersection<InferTuple<B>[number]>>}
+ * @since 1.2.0
+ */
+export const intersection =
+  <A extends Typed<PlainObject>, B extends Typed<PlainObject>[]>(
+    ...types: [A, ...B]
+  ): Typed<Infer<A> & UnionToIntersection<InferTuple<B>[number]>> =>
+  (x): Result<Infer<A> & UnionToIntersection<InferTuple<B>[number]>> => {
+    const errors: Err[] = [];
+    const obj = Object.create(null);
+
+    for (const type of types) {
+      const result = type(x);
+      if (result.success) {
+        Object.assign(obj, result.value);
+      } else {
+        errors.push(...result.errors);
+      }
+    }
+
+    return toResult(obj, errors);
   };
 
 /**

@@ -22,7 +22,7 @@ import {
 } from "./util";
 
 /**
- * Creates a new type from a given base type.
+ * Create a new type from a given base type.
  * It ensures that the base type passes validation before carrying on.
  *
  * @example
@@ -34,10 +34,9 @@ import {
  * )
  * ```
  *
- * @template I, O
- * @param {Typed<I>} base - The base type.
- * @param {(value: I) => Result<O, Err>} onSuccess - The mapping function.
- * @returns {Typed<O>}
+ * @param base - The base type.
+ * @param onSuccess - The mapping function.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const map =
@@ -50,8 +49,8 @@ export const map =
 /**
  * Check wether a given value is of type string.
  *
- * @param {*} value - The value to check.
- * @returns {Result<string>}
+ * @param value - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const string: Typed<string> = (x) =>
@@ -63,8 +62,8 @@ export const string: Typed<string> = (x) =>
  * Check wether a given value is of type number.
  * It also makes sure that the value is a finite number.
  *
- * @param {*} value - The value to check.
- * @returns {Result<number>}
+ * @param value - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const number: Typed<number> = (x) =>
@@ -77,8 +76,8 @@ export const number: Typed<number> = (x) =>
 /**
  * Check wether a given value is of type boolean.
  *
- * @param {*} value - The value to check.
- * @returns {Result<boolean>}
+ * @param value - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const boolean: Typed<boolean> = (x) =>
@@ -87,11 +86,11 @@ export const boolean: Typed<boolean> = (x) =>
     : failure(toError(toMessage("boolean", getTypeOf(x))));
 
 /**
- * Check weather a given value is of type Date.
- * It also makes sure that the value is a valid date.
+ * Check wether a given value is of type Date.
+ * It also makes sure that the date is a valid.
  *
- * @param {*} value - The value to check.
- * @returns {Result<Date>}
+ * @param value - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const date: Typed<Date> = (x) =>
@@ -102,8 +101,7 @@ export const date: Typed<Date> = (x) =>
     : failure(toError(toMessage("date", getTypeOf(x))));
 
 /**
- * Creates a new typed function from a given base type.
- * It ensures that value is an array and every item is of base type.
+ * Create a new typed function that will check wether a given value is an array and every element of the array passes the given type.
  *
  * @example
  * ```ts
@@ -112,9 +110,8 @@ export const date: Typed<Date> = (x) =>
  * arrayOfStrings(['hello', 123]) // failure
  * ```
  *
- * @template T
- * @param {Typed<T>} type - The type that every item should be of.
- * @returns {Typed<T[]>}
+ * @param type - The type of the items in the array.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const array =
@@ -137,7 +134,7 @@ export const array =
   };
 
 /**
- * Creates a new typed function from a given shape.
+ * Create a new typed function from a given shape.
  * The shape can be as deep as needed.
  *
  * @example
@@ -152,8 +149,8 @@ export const array =
  * })
  * ```
  *
- * @param {Shape} shape - The shape to check.
- * @returns {Typed<Infer<Shape>>}
+ * @param shape - The shape of the object.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
@@ -177,7 +174,7 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
 };
 
 /**
- * Creates a new typed function from a given constant.
+ * Create a new typed function from a given constant.
  * It ensures that the value is equal to the given constant.
  *
  * @example
@@ -187,9 +184,8 @@ export const object = <T extends Shape>(shape: T): Typed<Infer<T>> => {
  * constant('world') // failure
  * ```
  *
- * @template T
- * @param {*} value - The constant to check.
- * @returns {Typed<T>}
+ * @param value - The constant to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const literal =
@@ -200,7 +196,7 @@ export const literal =
       : failure(toError(`Expecting literal '${constant}'. Got '${x}'`));
 
 /**
- * Creates a new typed function from a given type that will succeed if the value is null.
+ * Create a new typed function from a given type that will succeed if the value is null.
  *
  * @example
  * ```ts
@@ -210,9 +206,8 @@ export const literal =
  * nullable(123) // failure
  * ```
  *
- * @template T
- * @param {Typed<T>} type - The type to check.
- * @returns {Typed<T | null>}
+ * @param type - The type to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const nullable =
@@ -221,7 +216,7 @@ export const nullable =
     x === null ? success(x) : type(x);
 
 /**
- * Creates a new typed function from a given type that will succeed if the value is undefined.
+ * Create a new typed function from a given type that will succeed if the value is undefined.
  *
  * @example
  * ```ts
@@ -231,9 +226,8 @@ export const nullable =
  * optional(123) // failure
  * ```
  *
- * @template T
- * @param {Typed<T>} type - The type to check.
- * @returns {Typed<T | undefined>}
+ * @param type - The type to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const optional =
@@ -242,7 +236,7 @@ export const optional =
     typeof x === "undefined" ? success(x) : type(x);
 
 /**
- * Creates a new typed function from a given TypeScript Enum.
+ * Create a new typed function from a given TypeScript Enum.
  *
  * @example
  * ```ts
@@ -257,9 +251,8 @@ export const optional =
  * role(Role.GUEST) // failure
  * ```
  *
- * @template T, K
- * @param {Enum} enumType - The enum to check.
- * @returns {Typed<T[K]>}
+ * @param enumType - The enum to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
@@ -276,7 +269,7 @@ export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
 };
 
 /**
- * Creates a new typed function from a list of types.
+ * Create a new typed function from a list of types.
  * A tuple is like a fixed length array and every item should be of the specified type.
  *
  * @example
@@ -286,9 +279,8 @@ export const enums = <T extends Enum, K extends keyof T>(e: T): Typed<T[K]> => {
  * tuple(['hello', 'world']) // failure
  * ```
  *
- * @template A, B
- * @param {Typed, ...Typed[]}
- * @returns {Typed<[Infer<A>, ...InferTuple<B>]>}
+ * @param types - The types to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const tuple =
@@ -316,7 +308,7 @@ export const tuple =
   };
 
 /**
- * Creates a new typed function from a list of types.
+ * Create a new typed function from a list of types.
  * This function will succeed if the value is any of the given types.
  *
  * @example
@@ -327,9 +319,8 @@ export const tuple =
  * anyOf(true) // success
  * anyOf(null) // failure
  * ```
- * @template A, B
- * @param {Typed, ...Typed[]}
- * @returns {Typed<Infer<A> | ...InferTuple<B>[number]}
+ * @param types - The types to check.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const union =
@@ -351,7 +342,7 @@ export const union =
   };
 
 /**
- * Creates a new typed function which combines multiple types into one.
+ * Create a new typed function which combines multiple types into one.
  *
  * @example
  * ```ts
@@ -363,9 +354,9 @@ export const union =
  * c({ name: 'hello', age: 'world' }) // failure
  * c({name: 'hello'}) // failure
  * ```
- * @template A, B
- * @param {Typed, ...Typed[]}
- * @returns {Typed<Infer<A> & UnionToIntersection<InferTuple<B>[number]>>}
+ *
+ * @param types - The types to check.
+ * @returns The new type.
  * @since 1.2.0
  */
 export const intersection =
@@ -391,12 +382,13 @@ export const intersection =
 /**
  * A passthrough function which returns its input marked as any.
  * Do not use this unless you really need to, it defeats the purpose of this library.
+ *
  * @since 1.0.0
  */
 export const any: Typed<any> = (x): any => success(x);
 
 /**
- * Creates a new typed function from a given type that will return a fallback if the value is undefined.
+ * Create a new typed function from a given type that will return a fallback value if the input value is undefined.
  *
  * @example
  * ```ts
@@ -406,10 +398,9 @@ export const any: Typed<any> = (x): any => success(x);
  * withFallback('hello') // failure
  * ```
  *
- * @template T
- * @param {Typed<T>} type - The type to check.
- * @param {T} fallback - The fallback value.
- * @returns {Typed<T>}
+ * @param type - The type to check.
+ * @param fallback - The fallback value.
+ * @returns The new type.
  * @since 1.0.0
  */
 export const defaulted =
@@ -420,21 +411,26 @@ export const defaulted =
 /**
  * Coerce first, then check if value is a string.
  *
- * @returns {Typed<string>}
+ * @param x - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const asString: Typed<string> = (x) => string(String(x));
 
 /**
  * Coerce first, then check if value is a number.
- * @returns {Typed<number>}
+ *
+ * @param x - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const asNumber: Typed<number> = (x) => number(Number(x));
 
 /**
  * Coerce first, then check if value is a valid date.
- * @returns {Typed<Date>}
+ *
+ * @param x - The value to check.
+ * @returns The result.
  * @since 1.0.0
  */
 export const asDate: Typed<Date> = (x) =>

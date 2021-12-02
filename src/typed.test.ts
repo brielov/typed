@@ -51,6 +51,20 @@ describe.each([
   });
 });
 
+describe(".regex()", () => {
+  const r = /\.ts$/;
+
+  it("fails when value don't matches the regular expression", () => {
+    expect(T.regex(r)("hello.js")).toEqual(
+      failure(toError(`Expecting value to match '${r}'`)),
+    );
+  });
+
+  it("succeeds when value matches the regular expression", () => {
+    expect(T.regex(r)("hello.ts")).toEqual(success("hello.ts"));
+  });
+});
+
 describe(".array()", () => {
   it("fails when value is not an array", () => {
     expect(T.array(T.string)({})).toEqual(
@@ -294,5 +308,17 @@ describe(".map()", () => {
 
   it("maps input to output", () => {
     expect(t("hello")).toEqual(success("HELLO"));
+  });
+});
+
+describe(".refine()", () => {
+  const t = T.refine(T.string, (s) => s.trim().toUpperCase());
+
+  it("fails when input fail", () => {
+    expect(t(1)).toEqual(failure(toError(toMessage("string", "number"))));
+  });
+
+  it("maps input to output", () => {
+    expect(t("   hello   ")).toEqual(success("HELLO"));
   });
 });

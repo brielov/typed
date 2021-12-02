@@ -47,6 +47,29 @@ export const map =
   };
 
 /**
+ * It allows you to further process the result of a type.
+ * Specially usefull when trimming, upper casing, etc.
+ * Keep in mind that the output type must be the same as the input type.
+ *
+ * @example
+ * ```ts
+ * const lowerTrim = T.refine(T.string, (value) => value.trim().toLowerCase())
+ * lowerTrim('  HELLO WORLD  ') // Success('hello world')
+ * ```
+ *
+ * @param base - The base type.
+ * @param onSuccess - The mapping function.
+ * @returns The new type.
+ * @since 1.3.0
+ */
+export const refine =
+  <I>(base: Typed<I>, onSuccess: (value: I) => I): Typed<I> =>
+  (x) => {
+    const result = base(x);
+    return result.success ? success(onSuccess(result.value)) : result;
+  };
+
+/**
  * Check wether a given value is of type string.
  *
  * @param value - The value to check.
@@ -99,6 +122,20 @@ export const date: Typed<Date> = (x) =>
       ? success(x)
       : failure(toError(`Expecting value to be a valid 'date'`))
     : failure(toError(toMessage("date", getTypeOf(x))));
+
+/**
+ * Check wether a given value is a string and matches a given regular expression.
+ *
+ * @param regex - The regex to check against.
+ * @returns The result.
+ * @since 1.3.0
+ */
+export const regex = (regex: RegExp) =>
+  map(string, (x) =>
+    regex.test(x)
+      ? success(x)
+      : failure(toError(`Expecting value to match '${regex.toString()}'`)),
+  );
 
 /**
  * Create a new typed function that will check wether a given value is an array and every element of the array passes the given type.

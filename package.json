@@ -1,6 +1,6 @@
 {
   "name": "typed",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0",
   "description": "Smallest runtime type-checking library ever made",
   "main": "dist/typed.js",
   "module": "dist/typed.mjs",

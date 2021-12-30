@@ -7,16 +7,18 @@
 
 # Typed
 
-A blazing fast, dependency free, 1kb runtime type-checking library written entirely in typescript, meant to be used with it.
+A blazing fast, 1kb runtime type-checking library written entirely in typescript, meant to be used with it.
 
 There are dozens of validation libraries out there, so why create yet another one? Well, I tried almost every library out there and there is only one that I really like called `superstruct` (which is awesome) that provides almost everything that I want, but still, I wanted to create my own. The others are simply bloated or don't provide proper typescript support. So that's where `typed` comes in.
 
-`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Success<T>` or `Failure`. If `success` is `true` then `value` is available and fully typed and if not, `errors` is available with a message and path from where the error originated.
+`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Ok<T>` or `Err`. If `success` is `true` then `value` is available and fully typed and if not, `errors` is available with a message and path from where the error originated.
+
+> Typed V2 now relies on `rsts`. `rsts` is a simple and lightweight port of Rust's Result and Option types.
 
 ## Install
 
 ```
-npm install typed
+npm install typed rsts
 ```
 
 ## Usage
@@ -33,14 +35,6 @@ const postType = T.object({
 });
 
 const result = postType(/* some JSON data */);
-
-if (result.success) {
-  // value is available inside this block
-  result.value;
-} else {
-  // errors is available inside this other block
-  result.errors;
-}
 ```
 
 ## Custom types
@@ -49,12 +43,13 @@ if (result.success) {
 
 ```typescript
 import * as T from "typed";
+import { Ok, Err } from "rsts";
 import isEmail from "is-email";
 
 const emailType = T.map(T.string, (value) =>
   isEmail(value)
-    ? T.success(value)
-    : T.failure(T.toError(`Expecting value to be a valid 'email'`)),
+    ? Ok(value)
+    : Err(T.toError(`Expecting value to be a valid 'email'`)),
 );
 
 // Later in your code
@@ -73,13 +68,13 @@ import * as T from "typed";
 const rangeType = (floor: number, ceiling: number) =>
   T.map(T.number, (value) => {
     if (value < floor || value > ceiling) {
-      return T.failure(
+      return Err(
         T.toError(
           `Expecting value to be between '${floor}' and '${ceiling}'. Got '${value}'`,
         ),
       );
     }
-    return T.success(value);
+    return Ok(value);
   });
 
 const geoType = T.object({
@@ -92,53 +87,10 @@ const latLngType = T.tuple(T.asNumber, T.asNumber);
 // It will take a string as an input and it will return `{ lat: number, lng: number }` as an output.
 const geoStrType = T.map(T.string, (value) => {
   const result = latLngType(value.split(","));
-  return result.success
-    ? geoType({ lat: result.value[0], lng: result.value[1] })
-    : result;
+  return result.map(([lat, lng]) => ({ lat, lng }));
 });
 
 const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
-```
-
-There is another utility function called `fold` which lets you run either a `onLeft` or `onRight` function depending on the result of the validation.
-
-```tsx
-import * as T from "typed";
-
-const userType = T.object({
-  id: T.number,
-  name: T.string,
-});
-
-const fetcher = (path: string) =>
-  fetch(path)
-    .then((res) => res.json())
-    .then(userType);
-
-const Profile: React.FC = () => {
-  const { data: result } = useSWR("/api/users", fetcher);
-
-  if (!result) {
-    return <div>Loading...</div>;
-  }
-
-  return T.fold(
-    result,
-    (errors) => (
-      <ul>
-        {errors.map((err, key) => (
-          <li key={key}>{`${err.message} @ ${err.path.join(".")}`}</li>
-        ))}
-      </ul>
-    ),
-    (user) => (
-      <div>
-        <h1>{user.name}</h1>
-        <p>{user.id}</p>
-      </div>
-    ),
-  );
-};
 ```
 
 ## Inference

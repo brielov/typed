@@ -1,7 +1,7 @@
 import dts from "rollup-plugin-dts";
 import esbuild from "rollup-plugin-esbuild";
 
-const name = require("./package.json").main.replace(/\.js$/, "");
+const name = require("./package.json").main.replace(/\.m?js$/, "");
 
 const bundle = (config) => ({
   ...config,
@@ -11,7 +11,7 @@ const bundle = (config) => ({
 
 export default [
   bundle({
-    plugins: [esbuild({ minify: true })],
+    plugins: [esbuild({ target: "esnext" })],
     output: [
       {
         file: `${name}.js`,

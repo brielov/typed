@@ -1,10 +1,20 @@
-import type { Err, Failure, Result, Success } from "./common";
+import { type Result } from "rsts";
+import { type Type } from "./common";
+import { TypeAggregateErr, TypeErr } from "./error";
 
 /**
- * Create a commonly used message of missmatching types
+ * Check wether the value is a plain object
  */
-export const toMessage = (expected: string, actual: string) =>
-  `Expecting type '${expected}'. Got type '${actual}'`;
+export const isPlainObject = (
+  value: unknown,
+): value is { [key: string]: unknown } =>
+  value !== null && typeof value === "object" && !Array.isArray(value);
+
+/**
+ * Create a commonly used message of mismatching types
+ */
+export const toMismatchMsg = (expected: string, actual: string) =>
+  `Expecting type '${expected}'. Got type '${actual}'.`;
 
 /**
  * Create a new error object.
@@ -14,44 +24,20 @@ export const toMessage = (expected: string, actual: string) =>
  * @returns The error object.
  * @since 1.0.0
  */
-export const toError = (message: string, path: string[] = []): Err => ({
-  path,
-  message,
-});
-
-/**
- * Create a typed success result.
- *
- * @param value - The value to wrap.
- * @returns The success result.
- * @since 1.0.0
- */
-export const success = <T>(value: T): Success<T> => ({
-  success: true,
-  value,
-});
-
-/**
- * Create a failure result.
- * @param errors - The errors to wrap.
- * @since 1.0.0
- */
-export const failure = (...errors: Err[]): Failure => ({
-  success: false,
-  errors,
-});
-
-/**
- * Create a new result based on wether errors have length or not
- */
-export const toResult = <T>(data: T, errors: Err[]): Result<T> =>
-  errors.length ? failure(...errors) : success(data);
+export const toErr = (message: string, path?: string[]) =>
+  new TypeAggregateErr([new TypeErr(message, path)]);
 
 /**
  * Prepend key to error list
  */
-export const mapErrorKey = (errors: Err[], key: string | number): Err[] =>
-  errors.map((err) => toError(err.message, [String(key), ...err.path]));
+export const mapErrorKey = (
+  key: string | number,
+  ...errors: TypeErr[]
+): TypeErr[] =>
+  errors.map((err) => {
+    err.path.unshift(String(key));
+    return err;
+  });
 
 /**
  * Get the type of a value
@@ -60,24 +46,48 @@ export const getTypeOf = (value: unknown) =>
   Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
 
 /**
- * Given a result, run the onLeft callback if it is a failure or the onRight callback if it is a success.
+ * Create a new type from a given base type.
+ * It ensures that the base type passes validation before carrying on.
  *
- * @param result - The result to run the callback on.
- * @param onLeft - The callback to run if the result is a failure.
- * @param onRight - The callback to run if the result is a success.
- * @returns Either the result of the onLeft callback or the result of the onRight callback.
- * @since 1.1.0
+ * @example
+ * ```ts
+ * const emailType = T.map(T.string, (value) =>
+ *  EMAIL_REGEX.test(value)
+ *    ? Ok(value)
+ *    : Err(T.toError('Expecting string to be a valid email address'))
+ * )
+ * ```
+ *
+ * @param base - The base type.
+ * @param onSuccess - The mapping function.
+ * @returns The new type.
+ * @since 1.0.0
  */
-export const fold = <T, L, R>(
-  result: Result<T>,
-  onLeft: (errors: Err[]) => L,
-  onRight: (value: T) => R,
-) => (result.success ? onRight(result.value) : onLeft(result.errors));
+export const map =
+  <I, O>(
+    base: Type<I>,
+    onSuccess: (value: I) => Result<O, TypeAggregateErr>,
+  ): Type<O> =>
+  (input) =>
+    base(input).andThen(onSuccess);
 
 /**
- * Check wether the value is a plain object
+ * It allows you to further process the result of a type.
+ * Specially usefull when trimming, upper casing, etc.
+ * Keep in mind that the output type must be the same as the input type.
+ *
+ * @example
+ * ```ts
+ * const lowerTrim = T.refine(T.string, (value) => value.trim().toLowerCase())
+ * lowerTrim('  HELLO WORLD  ') // Ok('hello world')
+ * ```
+ *
+ * @param base - The base type.
+ * @param onSuccess - The mapping function.
+ * @returns The new type.
+ * @since 1.3.0
  */
-export const isPlainObject = (
-  value: unknown,
-): value is { [key: string]: unknown } =>
-  value !== null && typeof value === "object" && !Array.isArray(value);
+export const refine =
+  <I>(base: Type<I>, onSuccess: (value: I) => I): Type<I> =>
+  (input) =>
+    base(input).map(onSuccess);

@@ -53,8 +53,8 @@ export const getTypeOf = (value: unknown) =>
  * ```ts
  * const emailType = T.map(T.string, (value) =>
  *  EMAIL_REGEX.test(value)
- *    ? T.success(value)
- *    : T.failure(T.toError('Expecting string to be a valid email address'))
+ *    ? Ok(value)
+ *    : Err(T.toError('Expecting string to be a valid email address'))
  * )
  * ```
  *
@@ -79,7 +79,7 @@ export const map =
  * @example
  * ```ts
  * const lowerTrim = T.refine(T.string, (value) => value.trim().toLowerCase())
- * lowerTrim('  HELLO WORLD  ') // Success('hello world')
+ * lowerTrim('  HELLO WORLD  ') // Ok('hello world')
  * ```
  *
  * @param base - The base type.

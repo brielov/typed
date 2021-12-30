@@ -1,12 +1,10 @@
-import { Err, Ok } from "rsts";
+import { Ok } from "rsts";
 
 import { TypeErr } from ".";
 import { getTypeOf, map, refine, toErr, toMismatchMsg } from "./util";
 import { string } from "./types";
 
-const noop = () => {
-  return void 0;
-};
+const noop = () => void 0;
 
 describe(".toMismatchMsg()", () => {
   it("returns a type difference message", () => {
@@ -51,11 +49,17 @@ describe(".map()", () => {
   const t = map(string, (s) => Ok(s.toUpperCase()));
 
   it("fails when input fail", () => {
-    expect(t(1)).toEqual(Err(toErr(toMismatchMsg("string", "number"))));
+    const result = t(1);
+    expect(result.isErr()).toEqual(true);
+    expect(result.unwrapErr()).toEqual(
+      toErr(toMismatchMsg("string", "number")),
+    );
   });
 
   it("maps input to output", () => {
-    expect(t("hello")).toEqual(Ok("HELLO"));
+    const result = t("hello");
+    expect(result.isOk()).toEqual(true);
+    expect(result.unwrap()).toEqual("HELLO");
   });
 });
 
@@ -63,10 +67,16 @@ describe(".refine()", () => {
   const t = refine(string, (s) => s.trim().toUpperCase());
 
   it("fails when input fail", () => {
-    expect(t(1)).toEqual(Err(toErr(toMismatchMsg("string", "number"))));
+    const result = t(1);
+    expect(result.isErr()).toEqual(true);
+    expect(result.unwrapErr()).toEqual(
+      toErr(toMismatchMsg("string", "number")),
+    );
   });
 
   it("maps input to output", () => {
-    expect(t("   hello   ")).toEqual(Ok("HELLO"));
+    const result = t("   hello   ");
+    expect(result.isOk()).toEqual(true);
+    expect(result.unwrap()).toEqual("HELLO");
   });
 });

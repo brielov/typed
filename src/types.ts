@@ -94,8 +94,8 @@ export const regex = (regex: RegExp) =>
  * @example
  * ```ts
  * const arrayOfStrings = T.array(T.string)
- * arrayOfStrings(['hello', 'world']) // success
- * arrayOfStrings(['hello', 123]) // failure
+ * arrayOfStrings(['hello', 'world']) // Ok
+ * arrayOfStrings(['hello', 123]) // Err
  * ```
  *
  * @param type - The type of the items in the array.
@@ -168,8 +168,8 @@ export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
  * @example
  * ```ts
  * const constant = T.literal('hello')
- * constant('hello') // success
- * constant('world') // failure
+ * constant('hello') // Ok
+ * constant('world') // Err
  * ```
  *
  * @param value - The constant to check.
@@ -189,9 +189,9 @@ export const literal =
  * @example
  * ```ts
  * const nullable = T.nullable(T.string)
- * nullable(null) // success
- * nullable('hello') // success
- * nullable(123) // failure
+ * nullable(null) // Ok
+ * nullable('hello') // Ok
+ * nullable(123) // Err
  * ```
  *
  * @param type - The type to check.
@@ -209,9 +209,9 @@ export const nullable =
  * @example
  * ```ts
  * const optional = T.optional(T.string)
- * optional(undefined) // success
- * optional('hello') // success
- * optional(123) // failure
+ * optional(undefined) // Ok
+ * optional('hello') // Ok
+ * optional(123) // Err
  * ```
  *
  * @param type - The type to check.
@@ -234,9 +234,9 @@ export const optional =
  * }
  *
  * const role = T.enums(Role)
- * role(Role.ADMIN) // success
- * role(Role.USER) // success
- * role(Role.GUEST) // failure
+ * role(Role.ADMIN) // Ok
+ * role(Role.USER) // Ok
+ * role(Role.GUEST) // Err
  * ```
  *
  * @param enumType - The enum to check.
@@ -262,8 +262,8 @@ export const enums = <T extends Enum, K extends keyof T>(e: T): Type<T[K]> => {
  * @example
  * ```ts
  * const tuple = T.tuple(T.string, T.number)
- * tuple(['hello', 123]) // success
- * tuple(['hello', 'world']) // failure
+ * tuple(['hello', 123]) // Ok
+ * tuple(['hello', 'world']) // Err
  * ```
  *
  * @param types - The types to check.
@@ -299,10 +299,10 @@ export const tuple =
  * @example
  * ```ts
  * const anyOf = T.union(T.string, T.number, T.boolean)
- * anyOf('hello') // success
- * anyOf(123) // success
- * anyOf(true) // success
- * anyOf(null) // failure
+ * anyOf('hello') // Ok
+ * anyOf(123) // Ok
+ * anyOf(true) // Ok
+ * anyOf(null) // Err
  * ```
  * @param types - The types to check.
  * @returns The new type.
@@ -333,9 +333,9 @@ export const union =
  * const b = T.object({ age: T.number})
  * const c = T.intersection(a, b)
  *
- * c({ name: 'hello', age: 123 }) // success
- * c({ name: 'hello', age: 'world' }) // failure
- * c({name: 'hello'}) // failure
+ * c({ name: 'hello', age: 123 }) // Ok
+ * c({ name: 'hello', age: 'world' }) // Err
+ * c({name: 'hello'}) // Err
  * ```
  *
  * @param types - The types to check.
@@ -374,9 +374,9 @@ export const any: Type<any> = (x): any => Ok(x);
  * @example
  * ```ts
  * const withFallback = T.defaulted(T.number, 0)
- * withFallback(undefined) // success(0)
- * withFallback(123) // success(123)
- * withFallback('hello') // failure
+ * withFallback(undefined) // Ok(0)
+ * withFallback(123) // Ok(123)
+ * withFallback('hello') // Err
  * ```
  *
  * @param type - The type to check.

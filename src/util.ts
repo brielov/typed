@@ -64,8 +64,8 @@ export function getTypeOf(x: any): string {
  * ```ts
  * const emailType = T.map(T.string, (value) =>
  *  EMAIL_REGEX.test(value)
- *    ? Ok(value)
- *    : Err(T.toError('Expecting string to be a valid email address'))
+ *    ? T.ok(value)
+ *    : T.err(T.toError('Expecting string to be a valid email address'))
  * )
  * ```
  *

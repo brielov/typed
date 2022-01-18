@@ -11,14 +11,16 @@ export function err(...errors: Err[]): Failure {
 /**
  * Check wether the value is a plain object
  */
-export const isPlainObject = (value: any): value is { [key: string]: any } =>
-  value !== null && typeof value === "object" && !Array.isArray(value);
+export function isPlainObject(value: any): value is { [key: string]: any } {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
 
 /**
  * Create a commonly used message of mismatching types
  */
-export const toMismatchMsg = (expected: string, actual: string) =>
-  `Expecting type '${expected}'. Got type '${actual}'.`;
+export function toMismatchMsg(expected: string, actual: string) {
+  return `Expecting type '${expected}'. Got type '${actual}'.`;
+}
 
 /**
  * Create a new error object.

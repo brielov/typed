@@ -1,13 +1,17 @@
-import { type Result } from "rsts";
-import { type Type } from "./common";
-import { TypeAggregateErr, TypeErr } from "./error";
+import type { Err, Failure, Result, Success, Type } from "./common";
+
+export function ok<T>(data: T): Success<T> {
+  return { ok: true, data };
+}
+
+export function err(...errors: Err[]): Failure {
+  return { ok: false, errors };
+}
 
 /**
  * Check wether the value is a plain object
  */
-export const isPlainObject = (
-  value: unknown,
-): value is { [key: string]: unknown } =>
+export const isPlainObject = (value: any): value is { [key: string]: any } =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 
 /**
@@ -24,26 +28,27 @@ export const toMismatchMsg = (expected: string, actual: string) =>
  * @returns The error object.
  * @since 1.0.0
  */
-export const toErr = (message: string, path?: string[]) =>
-  new TypeAggregateErr([new TypeErr(message, path)]);
+export function toErr(message: string, path: string[] = []): Err {
+  return { message, path };
+}
+// export const toErr = (message: string, path?: string[]) =>
+//   new TypeAggregateErr([new TypeErr(message, path)]);
 
 /**
  * Prepend key to error list
  */
-export const mapErrorKey = (
-  key: string | number,
-  ...errors: TypeErr[]
-): TypeErr[] =>
-  errors.map((err) => {
-    err.path.unshift(String(key));
-    return err;
+export function mapErrorKey(key: string | number, ...errors: Err[]): Err[] {
+  return errors.map(function (err) {
+    return { ...err, path: [key.toString(), ...err.path] };
   });
+}
 
 /**
  * Get the type of a value
  */
-export const getTypeOf = (value: unknown) =>
-  Object.prototype.toString.call(value).slice(8, -1).toLowerCase();
+export function getTypeOf(x: any): string {
+  return Object.prototype.toString.call(x).slice(8, -1).toLowerCase();
+}
 
 /**
  * Create a new type from a given base type.
@@ -63,13 +68,15 @@ export const getTypeOf = (value: unknown) =>
  * @returns The new type.
  * @since 1.0.0
  */
-export const map =
-  <I, O>(
-    base: Type<I>,
-    onSuccess: (value: I) => Result<O, TypeAggregateErr>,
-  ): Type<O> =>
-  (input) =>
-    base(input).andThen(onSuccess);
+export function map<I, O>(
+  base: Type<I>,
+  onSuccess: (data: I) => Result<O>,
+): Type<O> {
+  return function (x: any) {
+    const result = base(x);
+    return result.ok ? onSuccess(result.data) : result;
+  };
+}
 
 /**
  * It allows you to further process the result of a type.
@@ -87,7 +94,8 @@ export const map =
  * @returns The new type.
  * @since 1.3.0
  */
-export const refine =
-  <I>(base: Type<I>, onSuccess: (value: I) => I): Type<I> =>
-  (input) =>
-    base(input).map(onSuccess);
+export function refine<T>(base: Type<T>, onSuccess: (data: T) => T): Type<T> {
+  return map(base, function (data) {
+    return ok(onSuccess(data));
+  });
+}

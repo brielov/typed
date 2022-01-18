@@ -7,18 +7,16 @@
 
 # Typed
 
-A blazing fast, 1kb runtime type-checking library written entirely in typescript, meant to be used with it.
+A blazing fast, dependency free, 1kb runtime type-checking library written entirely in typescript, meant to be used with it.
 
-There are dozens of validation libraries out there, so why create yet another one? Well, I tried almost every library out there and there is only one that I really like called `superstruct` (which is awesome) that provides almost everything that I want, but still, I wanted to create my own. The others are simply bloated or don't provide proper typescript support. So that's where `typed` comes in.
+There are dozens of validation libraries out there, so why create yet another one? Well, I tried almost every library out there and there is only one that I really like called `superstruct` (which is awesome) that provides almost everything that I need, but still, I wanted to create my own. The others are simply bloated or don't provide proper typescript support. So that's where `typed` comes in.
 
-`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Ok<T>` or `Err`. If `success` is `true` then `value` is available and fully typed and if not, `errors` is available with a message and path from where the error originated.
-
-> Typed V2 now relies on `rsts`. `rsts` is a simple and lightweight port of Rust's Result and Option types.
+`typed` is all about function composition. Each function is "standalone" and provides a safe way to validate data, you don't need a special kind of function to execute a schema against some value. All functions return a special type which is either `Success` or `Failure`. If `ok` is `true` then `data` is available and fully typed and if not, `errors` is available with a message and path from where the error originated.
 
 ## Install
 
 ```
-npm install typed rsts
+npm install typed
 ```
 
 ## Usage
@@ -43,13 +41,12 @@ const result = postType(/* some JSON data */);
 
 ```typescript
 import * as T from "typed";
-import { Ok, Err } from "rsts";
 import isEmail from "is-email";
 
 const emailType = T.map(T.string, (value) =>
   isEmail(value)
-    ? Ok(value)
-    : Err(T.toError(`Expecting value to be a valid 'email'`)),
+    ? T.ok(value)
+    : T.err(T.toError(`Expecting value to be a valid 'email'.`)),
 );
 
 // Later in your code
@@ -60,7 +57,7 @@ const userType = T.object({
 });
 ```
 
-A more complex example is the following:
+You can compose more complex types like so:
 
 ```typescript
 import * as T from "typed";
@@ -68,13 +65,13 @@ import * as T from "typed";
 const rangeType = (floor: number, ceiling: number) =>
   T.map(T.number, (value) => {
     if (value < floor || value > ceiling) {
-      return Err(
+      return T.err(
         T.toError(
-          `Expecting value to be between '${floor}' and '${ceiling}'. Got '${value}'`,
+          `Expecting value to be between '${floor}' and '${ceiling}'. Got '${value}'.`,
         ),
       );
     }
-    return Ok(value);
+    return T.ok(value);
   });
 
 const geoType = T.object({
@@ -87,7 +84,7 @@ const latLngType = T.tuple(T.asNumber, T.asNumber);
 // It will take a string as an input and it will return `{ lat: number, lng: number }` as an output.
 const geoStrType = T.map(T.string, (value) => {
   const result = latLngType(value.split(","));
-  return result.map(([lat, lng]) => ({ lat, lng }));
+  return result.ok ? T.ok(result.data) : result;
 });
 
 const result = geoStrType("-39.031153, -67.576394"); // => { lat: -39.031153, lng: -67.576394 }
@@ -106,38 +103,16 @@ const postType = T.object({
   tags: T.array(T.string),
 });
 
-type Post = T.Infer<typeof postType>; // => Post { id: number, title: string, tags: string[] }
+type Post = T.Infer<typeof postType>; // => { id: number, title: string, tags: string[] }
 ```
-
-## Addons
-
-Because I use `typed` mostly on the server to cast and validate incoming data, I've created some addons to make some tasks easier and less repetitive, like normalizing emails and validating passwords. A `typed-extras` may be coming soon with a collection of commonly used data structures and validations.
-
-- [typed-email](https://github.com/brielov/typed-email)
-- [typed-password](https://github.com/brielov/typed-password)
 
 ## Benchmarks
 
+Benchmarks were done on a Mac Mini 2020 with M1 chip and 8GB of RAM. You can clone this repo and run `npm run benchmark` to see the results.
+
 ```
-superstruct (valid):
-  3 484 ops/s, ±0.86%    | 88.54% slower
-
-zod (valid):
-  2 384 ops/s, ±0.30%    | 92.16% slower
-
-typed (valid):
-  30 389 ops/s, ±0.55%   | fastest
-
-superstruct (invalid):
-  2 130 ops/s, ±3.31%    | 92.99% slower
-
-zod (invalid):
-  1 359 ops/s, ±1.83%    | slowest, 95.53% slower
-
-typed (invalid):
-  13 441 ops/s, ±0.23%   | 55.77% slower
-
-Finished 6 cases!
-  Fastest: typed (valid)
-  Slowest: zod (invalid)
+typed x 3,954,962 ops/sec ±0.16% (99 runs sampled)
+superstruct x 284,163 ops/sec ±0.13% (99 runs sampled)
+zod x 240,319 ops/sec ±0.20% (100 runs sampled)
+Fastest is typed
 ```

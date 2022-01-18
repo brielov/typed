@@ -9,6 +9,7 @@
     "dist"
   ],
   "scripts": {
+    "benchmark": "npm run build && node ./benchmarks",
     "build": "rimraf dist && rollup -c",
     "docs": "typedoc src/index.ts",
     "postinstall": "is-ci || husky install",
@@ -52,14 +53,12 @@
   "bugs": {
     "url": "https://github.com/brielov/typed/issues"
   },
-  "dependencies": {
-    "rsts": "^1.0.0"
-  },
   "devDependencies": {
     "@types/jest": "^27.0.3",
     "@types/node": "^17.0.5",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
+    "benchmark": "^2.1.4",
     "esbuild": "^0.14.9",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
@@ -75,8 +74,10 @@
     "rollup": "^2.62.0",
     "rollup-plugin-dts": "^4.1.0",
     "rollup-plugin-esbuild": "^4.8.2",
+    "superstruct": "^0.15.3",
     "ts-jest": "^27.1.2",
     "typedoc": "^0.22.10",
-    "typescript": "^4.5.4"
+    "typescript": "^4.5.4",
+    "zod": "^3.11.6"
   }
 }

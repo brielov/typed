@@ -1,7 +1,9 @@
-import { type Result } from "rsts";
-import { type TypeAggregateErr } from "./error";
+export type Err = { readonly message: string; path: string[] };
+export type Success<T> = { ok: true; data: T };
+export type Failure = { ok: false; errors: Err[] };
+export type Result<T> = Success<T> | Failure;
 
-export type Type<T = unknown> = (input: unknown) => Result<T, TypeAggregateErr>;
+export type Type<T = any> = (x: any) => Result<T>;
 export type Shape = { [key: string]: Type };
 export type PlainObject = { [key: string]: any };
 
@@ -30,7 +32,7 @@ export type InferTuple<
 type _InferTuple<
   Tuple extends Type[],
   Length extends number,
-  Accumulated extends unknown[],
+  Accumulated extends any[],
   Index extends number = Accumulated["length"],
 > = Index extends Length
   ? Accumulated

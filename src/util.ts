@@ -1,9 +1,15 @@
 import type { Err, Failure, Result, Success, Type } from "./common";
 
+/**
+ * Create a new `Success` result.
+ */
 export function ok<T>(data: T): Success<T> {
   return { ok: true, data };
 }
 
+/**
+ * Create a new `Failure` result.
+ */
 export function err(...errors: Err[]): Failure {
   return { ok: false, errors };
 }
@@ -33,8 +39,6 @@ export function toMismatchMsg(expected: string, actual: string) {
 export function toErr(message: string, path: string[] = []): Err {
   return { message, path };
 }
-// export const toErr = (message: string, path?: string[]) =>
-//   new TypeAggregateErr([new TypeErr(message, path)]);
 
 /**
  * Prepend key to error list

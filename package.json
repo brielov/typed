@@ -1,6 +1,6 @@
 {
   "name": "typed",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "A blazing fast, dependency free, 1kb runtime type-checking library written entirely in typescript.",
   "main": "dist/typed.js",
   "module": "dist/typed.mjs",

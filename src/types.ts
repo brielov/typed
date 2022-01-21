@@ -1,21 +1,22 @@
-import { Err, Ok } from "rsts";
-
 import type {
   Enum,
   Infer,
   InferTuple,
   Literal,
   PlainObject,
+  Result,
   Shape,
   Type,
   UnionToIntersection,
+  Err,
 } from "./common";
-import { TypeAggregateErr } from "./error";
 import {
+  err,
   getTypeOf,
   isPlainObject,
   map,
   mapErrorKey,
+  ok,
   toErr,
   toMismatchMsg,
 } from "./util";
@@ -27,10 +28,10 @@ import {
  * @returns The result.
  * @since 1.0.0
  */
-export const string: Type<string> = (x) =>
-  typeof x === "string"
-    ? Ok(x)
-    : Err(toErr(toMismatchMsg("string", getTypeOf(x))));
+export function string(x: any): Result<string> {
+  if (typeof x === "string") return ok(x);
+  return err(toErr(toMismatchMsg("string", getTypeOf(x))));
+}
 
 /**
  * Check wether a given value is of type number.
@@ -40,12 +41,13 @@ export const string: Type<string> = (x) =>
  * @returns The result.
  * @since 1.0.0
  */
-export const number: Type<number> = (input) =>
-  typeof input === "number"
-    ? Number.isFinite(input)
-      ? Ok(input)
-      : Err(toErr(`Expecting value to be a finite 'number'.`))
-    : Err(toErr(toMismatchMsg("number", getTypeOf(input))));
+export function number(x: any): Result<number> {
+  if (typeof x !== "number")
+    return err(toErr(toMismatchMsg("number", getTypeOf(x))));
+  if (!Number.isFinite(x))
+    return err(toErr(`Expecting value to be a finite 'number'.`));
+  return ok(x);
+}
 
 /**
  * Check wether a given value is of type boolean.
@@ -54,10 +56,10 @@ export const number: Type<number> = (input) =>
  * @returns The result.
  * @since 1.0.0
  */
-export const boolean: Type<boolean> = (input) =>
-  typeof input === "boolean"
-    ? Ok(input)
-    : Err(toErr(toMismatchMsg("boolean", getTypeOf(input))));
+export function boolean(x: any): Result<boolean> {
+  if (typeof x === "boolean") return ok(x);
+  return err(toErr(toMismatchMsg("boolean", getTypeOf(x))));
+}
 
 /**
  * Check wether a given value is of type Date.
@@ -67,12 +69,13 @@ export const boolean: Type<boolean> = (input) =>
  * @returns The result.
  * @since 1.0.0
  */
-export const date: Type<Date> = (input) =>
-  input instanceof Date
-    ? Number.isFinite(input.getTime())
-      ? Ok(input)
-      : Err(toErr(`Expecting value to be a valid 'date'.`))
-    : Err(toErr(toMismatchMsg("date", getTypeOf(input))));
+export function date(x: any): Result<Date> {
+  if (!(x instanceof Date))
+    return err(toErr(toMismatchMsg("date", getTypeOf(x))));
+  if (!Number.isFinite(x.getDate()))
+    return err(toErr(`Expecting date to be valid.`));
+  return ok(x);
+}
 
 /**
  * Check wether a given value is a string and matches a given regular expression.
@@ -81,12 +84,13 @@ export const date: Type<Date> = (input) =>
  * @returns The result.
  * @since 1.3.0
  */
-export const regex = (regex: RegExp) =>
-  map(string, (input) =>
-    regex.test(input)
-      ? Ok(input)
-      : Err(toErr(`Expecting value to match '${regex.toString()}'.`)),
-  );
+export function regex(regex: RegExp) {
+  return map(string, function (input) {
+    return regex.test(input)
+      ? ok(input)
+      : err(toErr(`Expecting value to match '${regex.toString()}'.`));
+  });
+}
 
 /**
  * Create a new typed function that will check wether a given value is an array and every element of the array passes the given type.
@@ -94,32 +98,34 @@ export const regex = (regex: RegExp) =>
  * @example
  * ```ts
  * const arrayOfStrings = T.array(T.string)
- * arrayOfStrings(['hello', 'world']) // Ok
- * arrayOfStrings(['hello', 123]) // Err
+ * arrayOfStrings(['hello', 'world']) // Success
+ * arrayOfStrings(['hello', 123]) // Failure
  * ```
  *
  * @param type - The type of the items in the array.
  * @returns The new type.
  * @since 1.0.0
  */
-export const array =
-  <T>(type: Type<T>): Type<T[]> =>
-  (input) => {
-    if (!Array.isArray(input)) {
-      return Err(toErr(toMismatchMsg("array", getTypeOf(input))));
-    }
+export function array<T>(type: Type<T>): Type<T[]> {
+  return function (x: any) {
+    if (!Array.isArray(x))
+      return err(toErr(toMismatchMsg("array", getTypeOf(x))));
+
     const arr: T[] = [];
-    const err = new TypeAggregateErr();
+    const errors: Err[] = [];
 
-    input.forEach((value, i) =>
-      type(value).match({
-        Ok: (v) => arr.push(v),
-        Err: (e) => err.errors.push(...mapErrorKey(i, ...e.errors)),
-      }),
-    );
+    for (let i = 0; i < x.length; i++) {
+      const result = type(x[i]);
+      if (result.ok) {
+        arr.push(result.data);
+      } else {
+        errors.push(...mapErrorKey(i, ...result.errors));
+      }
+    }
 
-    return err.errors.length > 0 ? Err(err) : Ok(arr);
+    return errors.length ? err(...errors) : ok(arr);
   };
+}
 
 /**
  * Create a new typed function from a given shape.
@@ -141,25 +147,26 @@ export const array =
  * @returns The new type.
  * @since 1.0.0
  */
-export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
+export function object<T extends Shape>(shape: T): Type<Infer<T>> {
   const entries = Object.entries(shape);
-  return (x) => {
-    if (!isPlainObject(x)) {
-      return Err(toErr(toMismatchMsg("object", getTypeOf(x))));
-    }
+  return function (x: any) {
+    if (!isPlainObject(x))
+      return err(toErr(toMismatchMsg("object", getTypeOf(x))));
     const obj = Object.create(null);
-    const err = new TypeAggregateErr();
+    const errors: Err[] = [];
 
-    entries.forEach(([key, type]) =>
-      type(x[key]).match({
-        Ok: (v) => (obj[key] = v),
-        Err: (e) => err.errors.push(...mapErrorKey(key, ...e.errors)),
-      }),
-    );
-
-    return err.errors.length > 0 ? Err(err) : Ok(obj);
+    for (let i = 0; i < entries.length; i++) {
+      const [key, type] = entries[i];
+      const result = type(x[key]);
+      if (result.ok) {
+        obj[key] = result.data;
+      } else {
+        errors.push(...mapErrorKey(key, ...result.errors));
+      }
+    }
+    return errors.length ? err(...errors) : ok(obj);
   };
-};
+}
 
 /**
  * Create a new typed function from a given constant.
@@ -168,20 +175,21 @@ export const object = <T extends Shape>(shape: T): Type<Infer<T>> => {
  * @example
  * ```ts
  * const constant = T.literal('hello')
- * constant('hello') // Ok
- * constant('world') // Err
+ * constant('hello') // Success
+ * constant('world') // Failure
  * ```
  *
  * @param value - The constant to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const literal =
-  <T extends Literal>(constant: T): Type<T> =>
-  (x) =>
-    constant === x
-      ? Ok(x as T)
-      : Err(toErr(`Expecting literal '${constant}'. Got '${x}'.`));
+export function literal<T extends Literal>(constant: T): Type<T> {
+  return function (x: any) {
+    return constant === x
+      ? ok(x)
+      : err(toErr(`Expecting literal '${constant}'. Got '${x}'.`));
+  };
+}
 
 /**
  * Create a new typed function from a given type that will succeed if the value is null.
@@ -189,19 +197,20 @@ export const literal =
  * @example
  * ```ts
  * const nullable = T.nullable(T.string)
- * nullable(null) // Ok
- * nullable('hello') // Ok
- * nullable(123) // Err
+ * nullable(null) // Success
+ * nullable('hello') // Success
+ * nullable(123) // Failure
  * ```
  *
  * @param type - The type to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const nullable =
-  <T>(type: Type<T>): Type<T | null> =>
-  (x) =>
-    x === null ? Ok(x) : type(x);
+export function nullable<T>(type: Type<T>): Type<T | null> {
+  return function (x: any) {
+    return x === null ? ok(x) : type(x);
+  };
+}
 
 /**
  * Create a new typed function from a given type that will succeed if the value is undefined.
@@ -209,19 +218,20 @@ export const nullable =
  * @example
  * ```ts
  * const optional = T.optional(T.string)
- * optional(undefined) // Ok
- * optional('hello') // Ok
- * optional(123) // Err
+ * optional(undefined) // Success
+ * optional('hello') // Success
+ * optional(123) // Failure
  * ```
  *
  * @param type - The type to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const optional =
-  <T>(type: Type<T>): Type<T | undefined> =>
-  (x) =>
-    typeof x === "undefined" ? Ok(x) : type(x);
+export function optional<T>(type: Type<T>): Type<T | undefined> {
+  return function (x: any) {
+    return typeof x === "undefined" ? ok(x) : type(x);
+  };
+}
 
 /**
  * Create a new typed function from a given TypeScript Enum.
@@ -234,26 +244,27 @@ export const optional =
  * }
  *
  * const role = T.enums(Role)
- * role(Role.ADMIN) // Ok
- * role(Role.USER) // Ok
- * role(Role.GUEST) // Err
+ * role(Role.ADMIN) // Success
+ * role(Role.USER) // Success
+ * role(Role.GUEST) // Failure
  * ```
  *
  * @param enumType - The enum to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const enums = <T extends Enum, K extends keyof T>(e: T): Type<T[K]> => {
+export function enums<T extends Enum, K extends keyof T>(e: T): Type<T[K]> {
   const values = Object.values(e);
-  return (x) =>
-    values.includes(x as any)
-      ? Ok(x as T[K])
-      : Err(
+  return function (x: any) {
+    return values.includes(x as any)
+      ? ok(x)
+      : err(
           toErr(
             `Expecting value to be one of '${values.join(", ")}'. Got '${x}'.`,
           ),
         );
-};
+  };
+}
 
 /**
  * Create a new typed function from a list of types.
@@ -262,35 +273,35 @@ export const enums = <T extends Enum, K extends keyof T>(e: T): Type<T[K]> => {
  * @example
  * ```ts
  * const tuple = T.tuple(T.string, T.number)
- * tuple(['hello', 123]) // Ok
- * tuple(['hello', 'world']) // Err
+ * tuple(['hello', 123]) // Success
+ * tuple(['hello', 'world']) // Failure
  * ```
  *
  * @param types - The types to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const tuple =
-  <A extends Type, B extends Type[]>(
-    ...types: [A, ...B]
-  ): Type<[Infer<A>, ...InferTuple<B>]> =>
-  (x) => {
-    if (!Array.isArray(x)) {
-      return Err(toErr(toMismatchMsg("array", getTypeOf(x))));
+export function tuple<A extends Type, B extends Type[]>(
+  ...types: [A, ...B]
+): Type<[Infer<A>, ...InferTuple<B>]> {
+  return function (x: any) {
+    if (!Array.isArray(x))
+      return err(toErr(toMismatchMsg("array", getTypeOf(x))));
+    const arr: any[] = [];
+    const errors: Err[] = [];
+
+    for (let i = 0; i < types.length; i++) {
+      const result = types[i](x[i]);
+      if (result.ok) {
+        arr.push(result.data);
+      } else {
+        errors.push(...mapErrorKey(i, ...result.errors));
+      }
     }
 
-    const arr: any[] = [];
-    const err = new TypeAggregateErr();
-
-    types.forEach((type, i) =>
-      type(x[i]).match({
-        Ok: (v) => arr.push(v),
-        Err: (e) => err.errors.push(...mapErrorKey(i, ...e.errors)),
-      }),
-    );
-
-    return err.errors.length > 0 ? Err(err) : (Ok(arr) as any);
+    return errors.length ? err(...errors) : ok(arr as any);
   };
+}
 
 /**
  * Create a new typed function from a list of types.
@@ -299,30 +310,30 @@ export const tuple =
  * @example
  * ```ts
  * const anyOf = T.union(T.string, T.number, T.boolean)
- * anyOf('hello') // Ok
- * anyOf(123) // Ok
- * anyOf(true) // Ok
- * anyOf(null) // Err
+ * anyOf('hello') // Success
+ * anyOf(123) // Success
+ * anyOf(true) // Success
+ * anyOf(null) // Failure
  * ```
  * @param types - The types to check.
  * @returns The new type.
  * @since 1.0.0
  */
-export const union =
-  <A extends Type, B extends Type[]>(
-    ...types: [A, ...B]
-  ): Type<Infer<A> | InferTuple<B>[number]> =>
-  (x) => {
-    const err = new TypeAggregateErr();
-
-    for (const type of types) {
-      const res = type(x);
-      if (res.isOk()) return res as any;
-      err.errors.push(...res.unwrapErr().errors);
+export function union<A extends Type, B extends Type[]>(
+  ...types: [A, ...B]
+): Type<Infer<A> | InferTuple<B>[number]> {
+  return function (x: any) {
+    const errors: Err[] = [];
+    for (let i = 0; i < types.length; i++) {
+      const result = types[i](x);
+      if (result.ok) {
+        return result as any;
+      }
+      errors.push(...result.errors);
     }
-
-    return Err(err);
+    return err(...errors);
   };
+}
 
 /**
  * Create a new typed function which combines multiple types into one.
@@ -333,32 +344,37 @@ export const union =
  * const b = T.object({ age: T.number})
  * const c = T.intersection(a, b)
  *
- * c({ name: 'hello', age: 123 }) // Ok
- * c({ name: 'hello', age: 'world' }) // Err
- * c({name: 'hello'}) // Err
+ * c({ name: 'hello', age: 123 }) // Success
+ * c({ name: 'hello', age: 'world' }) // Failure
+ * c({name: 'hello'}) // Failure
  * ```
  *
  * @param types - The types to check.
  * @returns The new type.
  * @since 1.2.0
  */
-export const intersection =
-  <A extends Type<PlainObject>, B extends Type<PlainObject>[]>(
-    ...types: [A, ...B]
-  ): Type<Infer<A> & UnionToIntersection<InferTuple<B>[number]>> =>
-  (x) => {
-    const err = new TypeAggregateErr();
+export function intersection<
+  A extends Type<PlainObject>,
+  B extends Type<PlainObject>[],
+>(
+  ...types: [A, ...B]
+): Type<Infer<A> & UnionToIntersection<InferTuple<B>[number]>> {
+  return function (x: any) {
     const obj = Object.create(null);
+    const errors: Err[] = [];
 
-    types.forEach((type) =>
-      type(x).match({
-        Ok: (v) => Object.assign(obj, v),
-        Err: (e) => err.errors.push(...e.errors),
-      }),
-    );
+    for (let i = 0; i < types.length; i++) {
+      const result = types[i](x);
+      if (result.ok) {
+        Object.assign(obj, result.data);
+      } else {
+        errors.push(...result.errors);
+      }
+    }
 
-    return err.errors.length > 0 ? Err(err) : Ok(obj);
+    return errors.length ? err(...errors) : ok(obj);
   };
+}
 
 /**
  * A passthrough function which returns its input marked as any.
@@ -366,7 +382,9 @@ export const intersection =
  *
  * @since 1.0.0
  */
-export const any: Type<any> = (x): any => Ok(x);
+export function any(x: any): Result<any> {
+  return ok(x);
+}
 
 /**
  * Create a new typed function from a given type that will return a fallback value if the input value is undefined.
@@ -374,9 +392,9 @@ export const any: Type<any> = (x): any => Ok(x);
  * @example
  * ```ts
  * const withFallback = T.defaulted(T.number, 0)
- * withFallback(undefined) // Ok(0)
- * withFallback(123) // Ok(123)
- * withFallback('hello') // Err
+ * withFallback(undefined) // Success(0)
+ * withFallback(123) // Success(123)
+ * withFallback('hello') // Failure
  * ```
  *
  * @param type - The type to check.
@@ -384,10 +402,11 @@ export const any: Type<any> = (x): any => Ok(x);
  * @returns The new type.
  * @since 1.0.0
  */
-export const defaulted =
-  <T>(type: Type<T>, fallback: T): Type<T> =>
-  (x) =>
-    typeof x === "undefined" ? Ok(fallback) : type(x);
+export function defaulted<T>(type: Type<T>, fallback: T): Type<T> {
+  return function (x: any) {
+    return typeof x === "undefined" ? ok(fallback) : type(x);
+  };
+}
 
 /**
  * Coerce first, then check if value is a string.
@@ -396,7 +415,9 @@ export const defaulted =
  * @returns The result.
  * @since 1.0.0
  */
-export const asString: Type<string> = (x) => string(String(x));
+export function asString(x: any) {
+  return string(String(x));
+}
 
 /**
  * Coerce first, then check if value is a number.
@@ -405,7 +426,9 @@ export const asString: Type<string> = (x) => string(String(x));
  * @returns The result.
  * @since 1.0.0
  */
-export const asNumber: Type<number> = (x) => number(Number(x));
+export function asNumber(x: any) {
+  return number(Number(x));
+}
 
 /**
  * Coerce first, then check if value is a valid date.
@@ -414,5 +437,7 @@ export const asNumber: Type<number> = (x) => number(Number(x));
  * @returns The result.
  * @since 1.0.0
  */
-export const asDate: Type<Date> = (x) =>
-  date(typeof x === "string" || typeof x === "number" ? new Date(x) : x);
+export function asDate(x: any) {
+  if (typeof x === "string" || typeof x === "number") return date(new Date(x));
+  return date(x);
+}

@@ -2,6 +2,7 @@ import type { Err, Failure, Result, Success, Type } from "./common";
 
 /**
  * Create a new `Success` result.
+ * @since 3.0.0
  */
 export function ok<T>(data: T): Success<T> {
   return { ok: true, data };
@@ -9,6 +10,7 @@ export function ok<T>(data: T): Success<T> {
 
 /**
  * Create a new `Failure` result.
+ * @since 3.0.0
  */
 export function err(...errors: Err[]): Failure {
   return { ok: false, errors };

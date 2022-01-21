@@ -109,10 +109,11 @@ type Post = T.Infer<typeof postType>; // => { id: number, title: string, tags: s
 ## Benchmarks
 
 Benchmarks were done on a Mac Mini 2020 with M1 chip and 8GB of RAM. You can clone this repo and run `npm run benchmark` to see the results.
+A somewhat complex dataset from [SpaceX](https://api.spacex.land/graphql/) was used to benchmark the library.
 
 ```
-typed x 3,954,962 ops/sec ±0.16% (99 runs sampled)
-superstruct x 284,163 ops/sec ±0.13% (99 runs sampled)
-zod x 240,319 ops/sec ±0.20% (100 runs sampled)
+zod x 5,149 ops/sec ±0.16% (101 runs sampled)
+superstruct x 6,424 ops/sec ±0.32% (100 runs sampled)
+typed x 98,049 ops/sec ±0.24% (99 runs sampled)
 Fastest is typed
 ```

@@ -177,7 +177,16 @@ describe(".record()", () => {
     ]);
   });
 
-  it("returns `Failure` when one or more properties return `Failure`", () => {
+  it("returns `Failure` when one or more keys return `Failure`", () => {
+    const type = T.record(T.literal("john"), T.object({ name: T.string }));
+    const res = type({ jane: { name: "jane" } }) as any;
+    expect(res.ok).toEqual(false);
+    expect(res.errors).toEqual([
+      toErr("Expecting literal 'john'. Got 'jane'.", ["jane"]),
+    ]);
+  });
+
+  it("returns `Failure` when one or more values return `Failure`", () => {
     const res = type({ john: { name: "john" }, jane: { age: 21 } }) as any;
     expect(res.ok).toEqual(false);
     expect(res.errors).toEqual([

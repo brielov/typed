@@ -157,6 +157,41 @@ describe(".object()", () => {
   });
 });
 
+describe(".record()", () => {
+  const type = T.record(T.string, T.object({ name: T.string }));
+
+  it("returns `Success` when all properties return `Ok`", () => {
+    const res = type({ john: { name: "john" }, jane: { name: "jane" } }) as any;
+    expect(res.ok).toEqual(true);
+    expect(res.data).toEqual({
+      john: { name: "john" },
+      jane: { name: "jane" },
+    });
+  });
+
+  it("returns `Failure` when input is not an object", () => {
+    const res = type([]) as any;
+    expect(res.ok).toEqual(false);
+    expect(res.errors).toEqual([
+      toErr("Expecting type 'object'. Got type 'array'."),
+    ]);
+  });
+
+  it("returns `Failure` when one or more properties return `Failure`", () => {
+    const res = type({ john: { name: "john" }, jane: { age: 21 } }) as any;
+    expect(res.ok).toEqual(false);
+    expect(res.errors).toEqual([
+      toErr("Expecting type 'string'. Got type 'undefined'.", ["jane", "name"]),
+    ]);
+  });
+
+  it("removes all properties which are not specified in shape", () => {
+    const res = type({ john: { name: "john", age: 30 } }) as any;
+    expect(res.ok).toEqual(true);
+    expect(res.data).toEqual({ john: { name: "john" } });
+  });
+});
+
 describe(".literal()", () => {
   it("returns `Success` when input is equal to constant", () => {
     const res = T.literal("hello")("hello") as any;

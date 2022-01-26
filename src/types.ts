@@ -169,6 +169,59 @@ export function object<T extends Shape>(shape: T): Type<Infer<T>> {
 }
 
 /**
+ * Creates a new typed function what will check that every key inside an object
+ * matches the key type and every value matches the value type. It is the equivalent
+ * to TypeScript's Record type
+ *
+ * @example
+ * ```ts
+ * const rec = T.record(T.string, T.object({ name: T.string })) // Record<string, { name: string }>
+ * const data = {
+ *  "1": { name: "john" },
+ *  "2": { name: "doe"}
+ * }
+ * rec(data) // ok
+ * ```
+ *
+ * @param key - The type of the key
+ * @param value - The type of the value
+ * @returns The new type
+ * @since 3.1.0
+ */
+export function record<K extends string, T>(
+  key: Type<K>,
+  value: Type<T>,
+): Type<Record<K, T>> {
+  return function (x: any) {
+    if (!isPlainObject(x))
+      return err(toErr(toMismatchMsg("object", getTypeOf(x))));
+
+    const obj = Object.create(null);
+    const errors: Err[] = [];
+    const values = Object.entries(x);
+
+    for (let i = 0; i < values.length; i++) {
+      const [k, v] = values[i];
+      const kResult = key(k);
+
+      if (!kResult.ok) {
+        errors.push(...mapErrorKey(k, ...kResult.errors));
+        continue;
+      }
+
+      const vResult = value(v);
+
+      if (vResult.ok) {
+        obj[k] = vResult.data;
+      } else {
+        errors.push(...mapErrorKey(k, ...vResult.errors));
+      }
+    }
+    return errors.length ? err(...errors) : ok(obj);
+  };
+}
+
+/**
  * Create a new typed function from a given constant.
  * It ensures that the value is equal to the given constant.
  *

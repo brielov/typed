@@ -5,7 +5,7 @@ const name = require("./package.json").main.replace(/\.m?js$/, "");
 
 const bundle = (config) => ({
   ...config,
-  input: "src/index.ts",
+  input: "src/mod.ts",
   external: (id) => !/^[./]/.test(id),
 });
 

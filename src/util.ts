@@ -1,4 +1,5 @@
-import type { Err, Failure, Result, Success, Type } from "./common";
+// deno-lint-ignore-file no-explicit-any
+import type { Err, Failure, Result, Success, Type } from "./common.ts";
 
 /**
  * Create a new `Success` result.
@@ -78,7 +79,7 @@ export function getTypeOf(x: any): string {
  */
 export function map<I, O>(
   base: Type<I>,
-  onSuccess: (data: I) => Result<O>,
+  onSuccess: (data: I) => Result<O>
 ): Type<O> {
   return function (x: any) {
     const result = base(x);

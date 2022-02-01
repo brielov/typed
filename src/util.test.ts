@@ -1,26 +1,29 @@
-import { getTypeOf, map, ok, refine, toErr, toMismatchMsg } from "./util";
-import { string } from "./types";
+import { assertEquals } from "https://deno.land/std@0.123.0/testing/asserts.ts";
+
+import {
+  err,
+  getTypeOf,
+  map,
+  ok,
+  refine,
+  toErr,
+  toMismatchMsg,
+} from "./util.ts";
+import { string } from "./types.ts";
 
 const noop = () => void 0;
 
-describe(".toMismatchMsg()", () => {
-  it("returns a type difference message", () => {
-    expect(toMismatchMsg("number", "string")).toEqual(
-      `Expecting type 'number'. Got type 'string'.`,
-    );
-  });
+Deno.test("toMismatchMsg - creates mismatch message", () => {
+  const msg = toMismatchMsg("number", "string");
+  assertEquals(msg, "Expecting type 'number'. Got type 'string'.");
 });
 
-describe(".toErr()", () => {
-  it("returns an error object", () => {
-    expect(toErr("hello", ["1"])).toEqual({
-      message: "hello",
-      path: ["1"],
-    });
-  });
+Deno.test("toErr - creates error object", () => {
+  const err = toErr("foo", ["1"]);
+  assertEquals(err, { message: "foo", path: ["1"] });
 });
 
-describe.each([
+const cases = [
   ["", "string"],
   [1, "number"],
   [true, "boolean"],
@@ -39,40 +42,30 @@ describe.each([
   [new WeakSet(), "weakset"],
   [new Promise(noop), "promise"],
   [BigInt(9007199254740991), "bigint"],
-])(".getTypeOf(%s)", (value, expected) => {
-  it(`returns ${expected}`, () => {
-    expect(getTypeOf(value)).toEqual(expected);
-  });
+];
+
+for (const [value, expected] of cases) {
+  Deno.test(`getTypeOf - returns ${expected as string}`, () =>
+    assertEquals(getTypeOf(value), expected)
+  );
+}
+
+Deno.test("map - fails when input fails", () => {
+  const type = map(string, (s) => ok(s.toUpperCase()));
+  assertEquals(type(1), err(toErr(toMismatchMsg("string", "number"))));
 });
 
-describe(".map()", () => {
-  const t = map(string, (s) => ok(s.toUpperCase()));
-
-  it("fails when input fail", () => {
-    const result = t(1) as any;
-    expect(result.ok).toEqual(false);
-    expect(result.errors).toEqual([toErr(toMismatchMsg("string", "number"))]);
-  });
-
-  it("maps input to output", () => {
-    const result = t("hello") as any;
-    expect(result.ok).toEqual(true);
-    expect(result.data).toEqual("HELLO");
-  });
+Deno.test("map - maps input to output", () => {
+  const type = map(string, (s) => ok(s.toUpperCase()));
+  assertEquals(type("hello"), ok("HELLO"));
 });
 
-describe(".refine()", () => {
-  const t = refine(string, (s) => s.trim().toUpperCase());
+Deno.test("refine - fails when input fails", () => {
+  const type = refine(string, (s) => s.trim().toUpperCase());
+  assertEquals(type(1), err(toErr(toMismatchMsg("string", "number"))));
+});
 
-  it("fails when input fail", () => {
-    const result = t(1) as any;
-    expect(result.ok).toEqual(false);
-    expect(result.errors).toEqual([toErr(toMismatchMsg("string", "number"))]);
-  });
-
-  it("maps input to output", () => {
-    const result = t("   hello   ") as any;
-    expect(result.ok).toEqual(true);
-    expect(result.data).toEqual("HELLO");
-  });
+Deno.test("refine - maps input to output", () => {
+  const type = refine(string, (s) => s.trim().toUpperCase());
+  assertEquals(type("   hello   "), ok("HELLO"));
 });

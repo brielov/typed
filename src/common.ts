@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 export type Err = { readonly message: string; path: string[] };
 export type Success<T> = { ok: true; data: T };
 export type Failure = { ok: false; errors: Err[] };
@@ -22,7 +23,7 @@ export type Enum = { [key: string]: string | number };
  */
 export type InferTuple<
   Tuple extends Type[],
-  Length extends number = Tuple["length"],
+  Length extends number = Tuple["length"]
 > = Length extends Length
   ? number extends Length
     ? Tuple
@@ -33,7 +34,7 @@ type _InferTuple<
   Tuple extends Type[],
   Length extends number,
   Accumulated extends any[],
-  Index extends number = Accumulated["length"],
+  Index extends number = Accumulated["length"]
 > = Index extends Length
   ? Accumulated
   : _InferTuple<Tuple, Length, [...Accumulated, Infer<Tuple[Index]>]>;

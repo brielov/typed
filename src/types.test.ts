@@ -1,447 +1,315 @@
-import * as T from "./types";
-import { toErr } from "./util";
+import { assertEquals } from "https://deno.land/std@0.123.0/testing/asserts.ts";
 
-describe(".string()", () => {
-  it("returns `Success` when input is a string", () => {
-    const res = T.string("abc") as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual("abc");
-  });
+import * as T from "./types.ts";
+import { err, ok, toErr, toMismatchMsg } from "./util.ts";
 
-  it("returns `Failure` when input is not a string", () => {
-    const res = T.string(1) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'string'. Got type 'number'."),
-    ]);
-  });
+Deno.test("string - succeeds when input is string", () =>
+  assertEquals(T.string("foo"), ok("foo"))
+);
+
+Deno.test("string - fails when input ain't string", () =>
+  assertEquals(T.string(1), err(toErr(toMismatchMsg("string", "number"))))
+);
+
+Deno.test("number - succeeds when input is number", () =>
+  assertEquals(T.number(1), ok(1))
+);
+
+Deno.test("number - fails when input ain't number", () =>
+  assertEquals(T.number("foo"), err(toErr(toMismatchMsg("number", "string"))))
+);
+
+Deno.test("number - fails when input ain't finite", () =>
+  assertEquals(
+    T.number(NaN),
+    err(toErr("Expecting value to be a finite 'number'."))
+  )
+);
+
+Deno.test("boolean - succeeds when input is boolean", () =>
+  assertEquals(T.boolean(false), ok(false))
+);
+
+Deno.test("boolean - fails when input ain't boolean", () =>
+  assertEquals(T.boolean(1), err(toErr(toMismatchMsg("boolean", "number"))))
+);
+
+Deno.test("date - succeeds when input is date", () => {
+  const d = new Date();
+  assertEquals(T.date(d), ok(d));
 });
 
-describe(".number()", () => {
-  it("returns `Success` when input is a number", () => {
-    const res = T.number(1) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(1);
-  });
+Deno.test("date - fails when input ain't Date", () =>
+  assertEquals(T.date(1), err(toErr(toMismatchMsg("date", "number"))))
+);
 
-  it("returns `Failure` when input is not a number", () => {
-    const res = T.number("abc") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'string'."),
-    ]);
-  });
+Deno.test("date - fails when date ain't valid", () =>
+  assertEquals(
+    T.date(new Date("invalid")),
+    err(toErr("Expecting date to be valid."))
+  )
+);
 
-  it("returns `Failure` when input is not a finite number", () => {
-    const res = T.number(NaN) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting value to be a finite 'number'."),
-    ]);
-  });
-});
+Deno.test("regex - succeeds when input matches expression", () =>
+  assertEquals(T.regex(/\.ts$/)("hello.ts"), ok("hello.ts"))
+);
 
-describe(".boolean()", () => {
-  it("returns `Success` when input is a boolean", () => {
-    const res = T.boolean(false) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(false);
-  });
-
-  it("returns `Failure` when input is not a boolean", () => {
-    const res = T.boolean(1) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'boolean'. Got type 'number'."),
-    ]);
-  });
-});
-
-describe(".date()", () => {
-  it("returns `Success` when input is a Date", () => {
-    const d = new Date();
-    const res = T.date(d) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(d);
-  });
-
-  it("returns `Failure` when input is not a Date", () => {
-    const res = T.date(false) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'date'. Got type 'boolean'."),
-    ]);
-  });
-
-  it("returns `Failure` when date is invalid", () => {
-    const res = T.date(new Date("invalid")) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([toErr("Expecting date to be valid.")]);
-  });
-});
-
-describe(".regex()", () => {
+Deno.test("regex - fails when input doesn't match expression", () => {
   const r = /\.ts$/;
-
-  it("returns `Success` when input matches the expression", () => {
-    const res = T.regex(r)("hello.ts") as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual("hello.ts");
-  });
-
-  it("returns `Failure` when input does not match the expression", () => {
-    const res = T.regex(r)("hello.js") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([toErr(`Expecting value to match '${r}'.`)]);
-  });
+  assertEquals(
+    T.regex(r)("hello.js"),
+    err(toErr(`Expecting value to match '${r}'.`))
+  );
 });
 
-describe(".array()", () => {
-  it("returns `Success` when all items return `Ok`", () => {
-    const res = T.array(T.number)([1, 2, 3]) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual([1, 2, 3]);
-  });
+Deno.test("array - succeeds when all items succeed", () =>
+  assertEquals(T.array(T.number)([1, 2, 3]), ok([1, 2, 3]))
+);
 
-  it("returns `Failure` when input is not an array", () => {
-    const res = T.array(T.string)({}) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'array'. Got type 'object'."),
-    ]);
-  });
+Deno.test("array - fails when input ain't array", () =>
+  assertEquals(
+    T.array(T.string)({}),
+    err(toErr(toMismatchMsg("array", "object")))
+  )
+);
 
-  it("returns `Failure` when one or more items return `Err`", () => {
-    const res = T.array(T.number)([1, 2, false, 3]) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'boolean'.", ["2"]),
-    ]);
-  });
+Deno.test("array - fails when one or more items fail", () =>
+  assertEquals(
+    T.array(T.number)([1, 2, false, 3]),
+    err(toErr(toMismatchMsg("number", "boolean"), ["2"]))
+  )
+);
+
+Deno.test("object - succeeds when all props succeed", () => {
+  const t = T.object({ name: T.string, age: T.number });
+  assertEquals(t({ name: "john", age: 30 }), ok({ name: "john", age: 30 }));
 });
 
-describe(".object()", () => {
-  const type = T.object({ name: T.string, age: T.number });
-
-  it("returns `Success` when all properties return `Ok`", () => {
-    const res = type({ name: "John", age: 30 }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({ name: "John", age: 30 });
-  });
-
-  it("returns `Failure` when input is not an object", () => {
-    const res = type([]) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'object'. Got type 'array'."),
-    ]);
-  });
-
-  it("returns `Failure` when one or more properties return `Failure`", () => {
-    const res = type({ age: 30 }) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'string'. Got type 'undefined'.", ["name"]),
-    ]);
-  });
-
-  it("removes all properties which are not specified in shape", () => {
-    const res = type({
-      name: "John",
-      age: 30,
-      email: "john@doe.com",
-      role: "user",
-    }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({ name: "John", age: 30 });
-  });
+Deno.test("object - fails when input ain't object", () => {
+  const t = T.object({ name: T.string, age: T.number });
+  assertEquals(t([]), err(toErr(toMismatchMsg("object", "array"))));
 });
 
-describe(".record()", () => {
-  const type = T.record(T.string, T.object({ name: T.string }));
-
-  it("returns `Success` when all properties return `Ok`", () => {
-    const res = type({ john: { name: "john" }, jane: { name: "jane" } }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({
-      john: { name: "john" },
-      jane: { name: "jane" },
-    });
-  });
-
-  it("returns `Failure` when input is not an object", () => {
-    const res = type([]) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'object'. Got type 'array'."),
-    ]);
-  });
-
-  it("returns `Failure` when one or more keys return `Failure`", () => {
-    const type = T.record(T.literal("john"), T.object({ name: T.string }));
-    const res = type({ jane: { name: "jane" } }) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting literal 'john'. Got 'jane'.", ["jane"]),
-    ]);
-  });
-
-  it("returns `Failure` when one or more values return `Failure`", () => {
-    const res = type({ john: { name: "john" }, jane: { age: 21 } }) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'string'. Got type 'undefined'.", ["jane", "name"]),
-    ]);
-  });
-
-  it("removes all properties which are not specified in shape", () => {
-    const res = type({ john: { name: "john", age: 30 } }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({ john: { name: "john" } });
-  });
+Deno.test("object - fails when one or more props fail", () => {
+  const t = T.object({ name: T.string, age: T.number });
+  assertEquals(
+    t({ name: "john" }),
+    err(toErr(toMismatchMsg("number", "undefined"), ["age"]))
+  );
 });
 
-describe(".literal()", () => {
-  it("returns `Success` when input is equal to constant", () => {
-    const res = T.literal("hello")("hello") as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual("hello");
-  });
-
-  it("returns `Failure` when input is not equal to constant", () => {
-    const res = T.literal("hello")("bye") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting literal 'hello'. Got 'bye'."),
-    ]);
-  });
+Deno.test("object - removes extra props", () => {
+  const t = T.object({ name: T.string });
+  assertEquals(t({ name: "john", age: 30 }), ok({ name: "john" }));
 });
 
-describe(".nullable()", () => {
-  const type = T.nullable(T.number);
-
-  it("returns `Success` when input is null", () => {
-    const res = type(null) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(null);
-  });
-
-  it("returns `Success` when the base type returns `Success`", () => {
-    const res = type(3) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(3);
-  });
-
-  it("returns `Failure` when input is not null or base type returns `Failure`", () => {
-    const res = type("hello") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'string'."),
-    ]);
-  });
+Deno.test("record - succeeds when all props succeed", () => {
+  const t = T.record(T.string, T.object({ age: T.number }));
+  const actual = t({ john: { age: 30 }, jane: { age: 31 } });
+  assertEquals(actual, ok({ john: { age: 30 }, jane: { age: 31 } }));
 });
 
-describe(".optional()", () => {
-  const type = T.optional(T.number);
-
-  it("returns `Success` when input is undefined", () => {
-    const res = type(void 0) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(void 0);
-  });
-
-  it("returns `Success` when the base type returns `Success`", () => {
-    const res = type(3) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(3);
-  });
-
-  it("returns `Failure` when input is not undefined or base type returns `Failure`", () => {
-    const res = type("hello") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'string'."),
-    ]);
-  });
+Deno.test("record - fails when input ain't object", () => {
+  const t = T.record(T.string, T.object({ age: T.number }));
+  assertEquals(t([]), err(toErr(toMismatchMsg("object", "array"))));
 });
 
-describe(".defaulted()", () => {
-  const type = T.defaulted(T.number, 10);
-
-  it("returns `Success` when base type returns `Success`", () => {
-    const res = type(1) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(1);
-  });
-
-  it("returns `Success` with default value when input is undefined", () => {
-    const res = type(void 0) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(10);
-  });
-
-  it("returns `Failure` when base type returns `Failure`", () => {
-    const res = type("3") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'string'."),
-    ]);
-  });
+Deno.test("record - fails when one or more keys fail", () => {
+  const t = T.record(T.literal("john"), T.object({ age: T.number }));
+  const actual = t({ jane: { age: 31 } });
+  assertEquals(
+    actual,
+    err(toErr("Expecting literal 'john'. Got 'jane'.", ["jane"]))
+  );
 });
 
-describe(".enums()", () => {
+Deno.test("record - fails when one or more props fail", () => {
+  const t = T.record(T.string, T.object({ name: T.string }));
+  const actual = t({ john: { name: "john" }, jane: { age: 21 } });
+  assertEquals(
+    actual,
+    err(toErr(toMismatchMsg("string", "undefined"), ["jane", "name"]))
+  );
+});
+
+Deno.test("record - removes extra props", () => {
+  const t = T.record(T.string, T.object({ name: T.string }));
+  const actual = t({ john: { name: "john", age: 30 } });
+  assertEquals(actual, ok({ john: { name: "john" } }));
+});
+
+Deno.test("literal - succeeds when input equals constant", () =>
+  assertEquals(T.literal("foo")("foo"), ok("foo"))
+);
+
+Deno.test("literal - fails when input ain't equal to constant", () =>
+  assertEquals(
+    T.literal("foo")("bar"),
+    err(toErr("Expecting literal 'foo'. Got 'bar'."))
+  )
+);
+
+Deno.test("nullable - succeeds with null input", () =>
+  assertEquals(T.nullable(T.number)(null), ok(null))
+);
+
+Deno.test("nullable - succeeds when base type succeeds", () =>
+  assertEquals(T.nullable(T.number)(1), ok(1))
+);
+
+Deno.test("nullable - fails when base type fails", () =>
+  assertEquals(
+    T.nullable(T.number)(""),
+    err(toErr(toMismatchMsg("number", "string")))
+  )
+);
+
+Deno.test("optional - succeeds with undefined input", () =>
+  assertEquals(T.optional(T.string)(undefined), ok(undefined))
+);
+
+Deno.test("optional - succeeds when base type succeeds", () =>
+  assertEquals(T.optional(T.string)("foo"), ok("foo"))
+);
+
+Deno.test("optional - fails when base type fails", () =>
+  assertEquals(
+    T.optional(T.string)(1),
+    err(toErr(toMismatchMsg("string", "number")))
+  )
+);
+
+Deno.test("defaulted - succeeds when base type succeeds", () =>
+  assertEquals(T.defaulted(T.number, 10)(1), ok(1))
+);
+
+Deno.test("defaulted - succeeds whith undefined input", () =>
+  assertEquals(T.defaulted(T.number, 10)(undefined), ok(10))
+);
+
+Deno.test("defaulted - fails when base type fails", () =>
+  assertEquals(
+    T.defaulted(T.number, 10)(""),
+    err(toErr(toMismatchMsg("number", "string")))
+  )
+);
+
+Deno.test("enums - succeeds when input matches enum", () => {
   enum Role {
     admin,
     user,
   }
 
   const type = T.enums(Role);
+  assertEquals(type(Role.admin), ok(Role.admin));
+});
 
-  it("returns `Success` when input matches enum", () => {
-    const res = type(Role.admin) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(Role.admin);
-  });
+Deno.test("enums - fails when input doesn't match enum", () => {
+  enum Role {
+    admin,
+    user,
+  }
 
-  it("returns `Failure` when input does not match enum", () => {
-    const res = type("whatever") as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
+  const type = T.enums(Role);
+  assertEquals(
+    type("guest"),
+    err(
       toErr(
         `Expecting value to be one of '${Object.values(Role).join(
-          ", ",
-        )}'. Got 'whatever'.`,
-      ),
-    ]);
-  });
+          ", "
+        )}'. Got 'guest'.`
+      )
+    )
+  );
 });
 
-describe(".tuple()", () => {
+Deno.test("tuple - succeeds when all items succeed", () => {
+  const t = T.tuple(T.number, T.string, T.boolean);
+  assertEquals(t([1, "foo", false]), ok([1, "foo", false]));
+});
+
+Deno.test("tuple - fails when input ain't array", () => {
+  const t = T.tuple(T.number, T.string, T.boolean);
+  assertEquals(t({}), err(toErr(toMismatchMsg("array", "object"))));
+});
+
+Deno.test("tuple - fails when input has less items than base type", () => {
   const type = T.tuple(T.number, T.string, T.boolean);
-
-  it("returns `Success` when all items return `Success`", () => {
-    const res = type([1, "hello", true]) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual([1, "hello", true]);
-  });
-
-  it("returns `Failure` when input is not an array", () => {
-    const res = type({}) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'array'. Got type 'object'."),
-    ]);
-  });
-
-  it("returns `Failure` when input has less items than the base type", () => {
-    const res = type([1, "hello"]) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'boolean'. Got type 'undefined'.", ["2"]),
-    ]);
-  });
-
-  it("discards extra items", () => {
-    const res = type([1, "hello", true, {}, []]) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data.length).toEqual(3);
-  });
-
-  it("can be tuple in tuple", () => {
-    const type = T.tuple(
-      T.tuple(T.number, T.number),
-      T.string,
-      T.boolean,
-    ) as any;
-    const res = type([[1, 2], "hello", true]);
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual([[1, 2], "hello", true]);
-  });
+  assertEquals(
+    type([1, "foo"]),
+    err(toErr(toMismatchMsg("boolean", "undefined"), ["2"]))
+  );
 });
 
-describe(".union()", () => {
+Deno.test("tuple - removes extra items", () => {
+  const type = T.tuple(T.number, T.string, T.boolean);
+  assertEquals(type([1, "foo", false, {}, new Date()]), ok([1, "foo", false]));
+});
+
+Deno.test("union - succeeds when all items succeed", () => {
   const type = T.union(T.number, T.string, T.boolean);
-
-  it("returns `Success` when all items return `Success`", () => {
-    for (const val of [1, "hello", true]) {
-      const res = type(val) as any;
-      expect(res.ok).toEqual(true);
-      expect(res.data).toEqual(val);
-    }
-  });
-
-  it("returns `Failure` when no item matches base types", () => {
-    const res = type({}) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'object'."),
-      toErr("Expecting type 'string'. Got type 'object'."),
-      toErr("Expecting type 'boolean'. Got type 'object'."),
-    ]);
-  });
+  for (const val of [1, "foo", false]) {
+    assertEquals(type(val), ok(val));
+  }
 });
 
-describe(".intersection()", () => {
+Deno.test("union - fails when no base type matches input", () => {
+  const type = T.union(T.number, T.string, T.boolean);
+  assertEquals(
+    type({}),
+    err(
+      toErr(toMismatchMsg("number", "object")),
+      toErr(toMismatchMsg("string", "object")),
+      toErr(toMismatchMsg("boolean", "object"))
+    )
+  );
+});
+
+Deno.test("intersection - succeeds when all types succeed", () => {
   const a = T.object({ a: T.string });
   const b = T.object({ b: T.number });
   const type = T.intersection(a, b);
-
-  it("returns `Success` when all types return `Success`", () => {
-    const res = type({ a: "hello", b: 10 }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({ a: "hello", b: 10 });
-  });
-
-  it("returns `Failure` when any type returns `Failure`", () => {
-    const res = type({ a: "hello" }) as any;
-    expect(res.ok).toEqual(false);
-    expect(res.errors).toEqual([
-      toErr("Expecting type 'number'. Got type 'undefined'.", ["b"]),
-    ]);
-  });
-
-  it("handles optional values", () => {
-    const c = T.object({ c: T.optional(T.boolean) });
-    const res = T.intersection(a, b, c)({ a: "hello", b: 10 }) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual({ a: "hello", b: 10 });
-  });
+  assertEquals(type({ a: "foo", b: 10 }), ok({ a: "foo", b: 10 }));
 });
 
-describe.each(["", 1, false, [], {}, null, undefined])(
-  ".any(%s) returns `Success`",
-  (value) => {
-    const res = T.any(value) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(value);
-  },
+Deno.test("intersection - fails when any type fails", () => {
+  const a = T.object({ a: T.string });
+  const b = T.object({ b: T.number });
+  const type = T.intersection(a, b);
+  assertEquals(
+    type({ a: "foo" }),
+    err(toErr(toMismatchMsg("number", "undefined"), ["b"]))
+  );
+});
+
+Deno.test("intersection - handles optional values", () => {
+  const a = T.object({ a: T.string });
+  const b = T.object({ b: T.number });
+  const c = T.object({ c: T.optional(T.boolean) });
+  const type = T.intersection(a, b, c);
+  assertEquals(type({ a: "foo", b: 10 }), ok({ a: "foo", b: 10 }));
+});
+
+for (const val of ["", 1, false, [], {}, null, undefined]) {
+  Deno.test("any - always return its input", () =>
+    assertEquals(T.any(val), ok(val))
+  );
+}
+
+Deno.test("asString - coerces input to string", () =>
+  assertEquals(T.asString(1), ok("1"))
 );
 
-describe(".asString()", () => {
-  it("coerces value to a string", () => {
-    const res = T.asString(1) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual("1");
-  });
+Deno.test("asNumber - coerces input to number", () =>
+  assertEquals(T.asNumber("1"), ok(1))
+);
+
+Deno.test("asDate - coerces input to date when number", () => {
+  const date = new Date();
+  assertEquals(T.asDate(date.getTime()), ok(date));
 });
 
-describe(".asNumber()", () => {
-  it("coerces value to a number", () => {
-    const res = T.asNumber("10") as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(10);
-  });
-});
-
-describe(".asDate()", () => {
-  it("coerces value to a date", () => {
-    const date = new Date("2021-10-22");
-    let res = T.asDate(date.toISOString()) as any;
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(date);
-
-    res = T.asDate(date.getTime());
-    expect(res.ok).toEqual(true);
-    expect(res.data).toEqual(date);
-  });
+Deno.test("asDate - coerces input to date when string", () => {
+  const date = new Date();
+  assertEquals(T.asDate(date.toISOString()), ok(date));
 });

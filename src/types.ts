@@ -1,5 +1,7 @@
+// deno-lint-ignore-file no-explicit-any
 import type {
   Enum,
+  Err,
   Infer,
   InferTuple,
   Literal,
@@ -8,8 +10,7 @@ import type {
   Shape,
   Type,
   UnionToIntersection,
-  Err,
-} from "./common";
+} from "./common.ts";
 import {
   err,
   getTypeOf,
@@ -19,7 +20,7 @@ import {
   ok,
   toErr,
   toMismatchMsg,
-} from "./util";
+} from "./util.ts";
 
 /**
  * Check wether a given value is of type string.
@@ -159,7 +160,9 @@ export function object<T extends Shape>(shape: T): Type<Infer<T>> {
       const [key, type] = entries[i];
       const result = type(x[key]);
       if (result.ok) {
-        obj[key] = result.data;
+        if (typeof result.data !== "undefined") {
+          obj[key] = result.data;
+        }
       } else {
         errors.push(...mapErrorKey(key, ...result.errors));
       }
@@ -190,7 +193,7 @@ export function object<T extends Shape>(shape: T): Type<Infer<T>> {
  */
 export function record<K extends string, T>(
   key: Type<K>,
-  value: Type<T>,
+  value: Type<T>
 ): Type<Record<K, T>> {
   return function (x: any) {
     if (!isPlainObject(x))
@@ -212,7 +215,9 @@ export function record<K extends string, T>(
       const vResult = value(v);
 
       if (vResult.ok) {
-        obj[k] = vResult.data;
+        if (typeof vResult.data !== "undefined") {
+          obj[k] = vResult.data;
+        }
       } else {
         errors.push(...mapErrorKey(k, ...vResult.errors));
       }
@@ -313,8 +318,8 @@ export function enums<T extends Enum, K extends keyof T>(e: T): Type<T[K]> {
       ? ok(x)
       : err(
           toErr(
-            `Expecting value to be one of '${values.join(", ")}'. Got '${x}'.`,
-          ),
+            `Expecting value to be one of '${values.join(", ")}'. Got '${x}'.`
+          )
         );
   };
 }
@@ -408,7 +413,7 @@ export function union<A extends Type, B extends Type[]>(
  */
 export function intersection<
   A extends Type<PlainObject>,
-  B extends Type<PlainObject>[],
+  B extends Type<PlainObject>[]
 >(
   ...types: [A, ...B]
 ): Type<Infer<A> & UnionToIntersection<InferTuple<B>[number]>> {

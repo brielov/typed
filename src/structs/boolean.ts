@@ -11,3 +11,22 @@ export const boolean =
     isBoolean(input)
       ? ok(input)
       : err(new StructError(msg, { input, path: [] }));
+
+if (import.meta.vitest) {
+  const { it } = import.meta.vitest;
+  const { expectErr: assertErr, expectOk: assertOk } = await import(
+    "../test-util"
+  );
+
+  it("returns err if input is not a boolean", () => {
+    const struct = boolean("test");
+    const actual = struct(null);
+    assertErr(actual, "test", { input: null, path: [] });
+  });
+
+  it("returns ok if input is a boolean", () => {
+    const struct = boolean("test");
+    assertOk(struct(true), true);
+    assertOk(struct(false), false);
+  });
+}

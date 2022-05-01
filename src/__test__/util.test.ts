@@ -1,16 +1,15 @@
 import { chain, map, ok, unwrap, unwrapOr } from "../util";
+import { expectErr, expectOk } from "../test-util";
 import { string } from "../structs/string";
 
 describe(".map()", () => {
   const struct = map(string("string test"), (str) => ok(Number(str)));
 
-  it("should return a valid result for a valid input", () => {
-    expect(struct("1")).toBeOk(1);
-  });
+  it("should return a valid result for a valid input", () =>
+    expectOk(struct("1"), 1));
 
-  it("should return an error for an invalid input", () => {
-    expect(struct(1)).toBeErr("string test", { input: 1, path: [] });
-  });
+  it("should return an error for an invalid input", () =>
+    expectErr(struct(1), "string test", { input: 1, path: [] }));
 });
 
 describe(".chain()", () => {
@@ -18,13 +17,11 @@ describe(".chain()", () => {
   const lower = (str: string) => str.toLowerCase();
   const struct = chain(string("string test"), trim, lower);
 
-  it("should return a valid result for a valid input", () => {
-    expect(struct("  TEST  ")).toBeOk("test");
-  });
+  it("should return a valid result for a valid input", () =>
+    expectOk(struct(" TEST  "), "test"));
 
-  it("returns err if base struct returns an error", () => {
-    expect(struct(1)).toBeErr("string test", { input: 1, path: [] });
-  });
+  it("returns err if base struct returns an error", () =>
+    expectErr(struct(1), "string test", { input: 1, path: [] }));
 });
 
 describe(".unwrap()", () => {

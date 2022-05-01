@@ -1,21 +1,28 @@
 {
   "name": "typed",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Fast, tiny and type-safe runtime validation library.",
-  "main": "dist/typed.js",
-  "module": "dist/typed.mjs",
-  "typings": "dist/typed.d.ts",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.mjs",
+  "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.umd.js"
+    }
+  },
   "files": [
     "dist"
   ],
   "scripts": {
     "benchmark": "npm run build && node ./benchmark",
-    "build": "rimraf dist && rollup -c",
+    "build": "tsc && vite build",
     "postinstall": "is-ci || husky install",
     "postpublish": "pinst --enable",
     "prepare": "npm run build",
     "prepublishOnly": "pinst --disable",
-    "test": "jest"
+    "test": "vitest",
+    "coverage": "vitest --coverage"
   },
   "keywords": [
     "array",
@@ -41,7 +48,8 @@
     "validate",
     "validation",
     "validation",
-    "validator"
+    "validator",
+    "zod"
   ],
   "license": "MIT",
   "author": "brielov <brielov@icloud.com>",
@@ -54,29 +62,25 @@
   },
   "homepage": "https://github.com/brielov/typed#readme",
   "devDependencies": {
-    "@types/jest": "^27.4.1",
     "@types/node": "^17.0.27",
     "@typescript-eslint/eslint-plugin": "^5.21.0",
     "@typescript-eslint/parser": "^5.21.0",
     "benchmark": "^2.1.4",
-    "esbuild": "^0.14.38",
+    "c8": "^7.11.2",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "happy-dom": "^3.1.0",
     "husky": "^7.0.4",
     "is-ci": "^3.0.1",
-    "jest": "^27.5.1",
-    "jest-diff": "^28.0.1",
     "lint-staged": "^12.4.0",
     "pinst": "^3.0.0",
     "prettier": "^2.6.2",
-    "rimraf": "^3.0.2",
-    "rollup": "^2.70.2",
-    "rollup-plugin-dts": "^4.2.1",
-    "rollup-plugin-esbuild": "^4.9.1",
     "superstruct": "^0.15.4",
-    "ts-jest": "^27.1.4",
     "typescript": "^4.6.3",
+    "vite": "^2.9.6",
+    "vite-plugin-dts": "^1.1.1",
+    "vitest": "^0.10.0",
     "zod": "^3.14.4"
   }
 }

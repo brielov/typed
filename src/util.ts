@@ -1,5 +1,5 @@
-import { Err, Obj, Ok, Result, Struct } from "./types";
-import { StructError } from "./error";
+import type { Err, Obj, Ok, Result, Struct } from "./types";
+import type { StructError } from "./error";
 
 /**
  * Check if value is a string.

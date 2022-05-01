@@ -15,8 +15,8 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "skipLibCheck": true,
-    "types": ["vitest/importMeta"]
+    "types": ["vitest/globals"]
   },
   "include": ["src"],
-  "exclude": ["vitest.config.ts", "src/test-util.ts"]
+  "exclude": ["vitest.config.ts"]
 }

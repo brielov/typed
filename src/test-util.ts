@@ -1,13 +1,9 @@
 import { expect } from "vitest";
 
 import { StructError, StructErrorInfo } from "./error";
-import { isErr, isOk } from "./util";
 
 export function expectOk(actual: any, expected: any) {
-  if (isErr(actual)) {
-    throw new Error(`Expected ok, got err: ${actual.error.message}`);
-  }
-  expect(actual.value).toEqual(expected);
+  expect(actual).toEqual({ ok: true, value: expected });
 }
 
 export function expectErr(
@@ -15,9 +11,7 @@ export function expectErr(
   message: string,
   info?: StructErrorInfo,
 ) {
-  if (isOk(actual)) {
-    throw new Error(`Expected err, got ok`);
-  }
+  expect(actual.ok).toBe(false);
   expect(actual.error).toBeInstanceOf(StructError);
   expect(actual.error.message).toEqual(message);
   if (info) {

@@ -5,7 +5,7 @@ import { defineConfig } from "vite";
 import { resolve } from "path";
 
 export default defineConfig({
-  // plugins: [dts()],
+  plugins: [dts()],
   build: {
     target: "es2020",
     lib: {
@@ -15,11 +15,8 @@ export default defineConfig({
       fileName: "index",
     },
   },
-  define: {
-    "import.meta.vitest": false,
-  },
   test: {
-    includeSource: ["src/**/*.ts"],
+    globals: true,
     watch: false,
   },
 });

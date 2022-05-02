@@ -18,5 +18,5 @@
     "types": ["vitest/globals"]
   },
   "include": ["src"],
-  "exclude": ["vitest.config.ts"]
+  "exclude": ["vitest.config.ts", "deno_dist"]
 }

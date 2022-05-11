@@ -2,7 +2,3 @@
 . "$(dirname "$0")/_/husky.sh"
 
 npx lint-staged
-npx rimraf deno_dist
-npx denoify
-npx rimraf deno_dist/test-util.ts deno_dist/__test__ deno_dist/structs/__test__
-git add deno_dist

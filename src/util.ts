@@ -1,5 +1,4 @@
 import type { Err, Obj, Ok, Result, Struct } from "./types";
-import type { StructError } from "./error";
 
 /**
  * Check if value is a string.
@@ -93,10 +92,7 @@ export function isErr<T, E extends Error>(
  * Map a base struct into another struct.
  */
 export const map =
-  <T, O>(
-    struct: Struct<T>,
-    mapFn: (input: T) => Result<O, StructError>,
-  ): Struct<O> =>
+  <T, O>(struct: Struct<T>, mapFn: Struct<O, T>): Struct<O> =>
   (input) => {
     const result = struct(input);
     return isOk(result) ? mapFn(result.value) : result;
@@ -127,9 +123,6 @@ export function unwrap<T, E extends Error>(result: Result<T, E>): T {
 /**
  * Returns the inner value of an Ok. Returns the default value if the result is an Err.
  */
-export function unwrapOr<T, E extends Error, D>(
-  result: Result<T, E>,
-  def: D,
-): T | D {
+export function unwrapOr<T, E extends Error>(result: Result<T, E>, def: T): T {
   return isOk(result) ? result.value : def;
 }

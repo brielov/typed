@@ -9,7 +9,7 @@ const MIN_COVERAGE = 100;
 export default defineConfig({
   plugins: [dts()],
   build: {
-    target: "es2020",
+    target: "es6",
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       name: "typed",

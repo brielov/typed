@@ -4,6 +4,8 @@ import dts from "vite-plugin-dts";
 import { defineConfig } from "vite";
 import { resolve } from "path";
 
+const MIN_COVERAGE = 100;
+
 export default defineConfig({
   plugins: [dts()],
   build: {
@@ -18,5 +20,11 @@ export default defineConfig({
   test: {
     globals: true,
     watch: false,
+    coverage: {
+      branches: MIN_COVERAGE,
+      functions: MIN_COVERAGE,
+      lines: MIN_COVERAGE,
+      statements: MIN_COVERAGE,
+    },
   },
 });

@@ -1,4 +1,4 @@
-MIT License Copyright (c) 2022 CodBot
+MIT License Copyright (c) 2023 Gabriel Vaquer
 
 Permission is hereby granted, free
 of charge, to any person obtaining a copy of this software and associated

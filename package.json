@@ -1,86 +1,48 @@
 {
   "name": "typed",
-  "version": "4.1.2",
-  "description": "Fast, tiny and type-safe runtime validation library.",
-  "main": "dist/index.umd.js",
-  "module": "dist/index.es.js",
-  "typings": "dist/index.d.ts",
+  "version": "10.0.0",
+  "main": "dist/typed.js",
+  "module": "dist/typed.mjs",
+  "types": "module",
+  "private": false,
   "exports": {
     ".": {
-      "import": "./dist/index.es.js",
-      "require": "./dist/index.umd.js"
+      "import": "./dist/typed.js",
+      "require": "./dist/typed.umd.cjs",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
-    "benchmark": "npm run build && node ./benchmark",
-    "build": "tsc && vite build",
-    "postinstall": "is-ci || husky install",
-    "postpublish": "pinst --enable",
-    "prepare": "npm run build",
-    "prepublishOnly": "pinst --disable",
-    "test": "vitest",
-    "coverage": "vitest --coverage"
+    "build": "vite build",
+    "test": "vitest run",
+    "dev": "vitest",
+    "lint": "tsc"
   },
-  "keywords": [
-    "array",
-    "assert",
-    "check",
-    "checker",
-    "collection",
-    "data",
-    "error",
-    "inference",
-    "interface",
-    "invalid",
-    "joi",
-    "json",
-    "list",
-    "model",
-    "object",
-    "schema",
-    "superstruct",
-    "type",
-    "typescript",
-    "valid",
-    "validate",
-    "validation",
-    "validation",
-    "validator",
-    "zod"
-  ],
-  "license": "MIT",
-  "author": "brielov <brielov@icloud.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/brielov/typed.git"
   },
+  "keywords": [],
+  "author": "Gabriel Vaquer",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/brielov/typed/issues"
   },
   "homepage": "https://github.com/brielov/typed#readme",
+  "description": "",
   "devDependencies": {
-    "@types/node": "^17.0.35",
-    "@typescript-eslint/eslint-plugin": "^5.25.0",
-    "@typescript-eslint/parser": "^5.25.0",
-    "benchmark": "^2.1.4",
-    "c8": "^7.11.3",
-    "eslint": "^8.16.0",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-plugin-prettier": "^4.0.0",
-    "happy-dom": "^4.0.1",
-    "husky": "^8.0.1",
-    "is-ci": "^3.0.1",
-    "lint-staged": "^12.4.1",
-    "pinst": "^3.0.0",
-    "prettier": "^2.6.2",
-    "superstruct": "^0.15.4",
-    "typescript": "^4.6.4",
-    "vite": "^2.9.9",
-    "vite-plugin-dts": "^1.1.1",
-    "vitest": "^0.12.9",
-    "zod": "^3.17.0"
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
+    "eslint": "^8.34.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5",
+    "vite": "^4.1.4",
+    "vite-plugin-dts": "^2.0.0-beta.3",
+    "vitest": "^0.28.5"
   }
 }

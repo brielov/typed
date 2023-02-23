@@ -1,30 +1,20 @@
-/// <reference types="vitest" />
-
-import dts from "vite-plugin-dts";
-import { defineConfig } from "vite";
 import { resolve } from "path";
-
-const MIN_COVERAGE = 100;
+import dts from "vite-plugin-dts";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [dts()],
   build: {
+    sourcemap: true,
     target: "es6",
     lib: {
       entry: resolve(__dirname, "src/index.ts"),
       name: "typed",
-      formats: ["es", "umd"],
-      fileName: "index",
+      fileName: "typed",
+      formats: ["cjs", "es", "umd"],
     },
   },
+  plugins: [dts()],
   test: {
-    globals: true,
-    watch: false,
-    coverage: {
-      branches: MIN_COVERAGE,
-      functions: MIN_COVERAGE,
-      lines: MIN_COVERAGE,
-      statements: MIN_COVERAGE,
-    },
+    setupFiles: ["test/test-setup.ts"],
   },
 });

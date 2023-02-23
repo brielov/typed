@@ -1,6 +1,0 @@
-{
-  "**/*.ts": [
-    "eslint --fix",
-    "vitest related"
-  ]
-}

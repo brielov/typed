@@ -1,23 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
-import { Option } from "../src/option";
+import { None, Option, Some } from "../src/option";
+import { toOption } from "../src/option/util";
 
-const some = (num = 1): Option<number> => Option.some(num);
-const none: Option<number> = Option.none;
+const some = (num = 1): Option<number> => Some(num);
+const none: Option<number> = None;
 
 describe("Option", () => {
   it("should return true if value is some", () => {
-    expect(Option.from(0).isSome()).toBe(true);
-    expect(Option.from(null).isSome()).toBe(false);
+    expect(some().isSome()).toBe(true);
+    expect(none.isSome()).toBe(false);
   });
 
   it("should return true if value is none", () => {
-    expect(Option.from(0).isNone()).toBe(false);
-    expect(Option.from(null).isNone()).toBe(true);
+    expect(toOption(0).isNone()).toBe(false);
+    expect(toOption(null).isNone()).toBe(true);
   });
 
   it("should be able to create an option from a value", () => {
-    expect(Option.from(0)).toBeSome(0);
-    expect(Option.from(null)).toBeNone();
+    expect(toOption(0)).toBeSome(0);
+    expect(toOption(null)).toBeNone();
   });
 
   it("should be able to check if it is some and run a function", () => {
@@ -85,16 +86,16 @@ describe("Option", () => {
 
   it("should be able to use the mapOr operator", () => {
     const f = (n: number) => n.toString();
-    expect(some().mapOr("", f)).toBeSome("1");
-    expect(none.mapOr("", f)).toBeSome("");
+    expect(some().mapOr("", f)).toEqual("1");
+    expect(none.mapOr("", f)).toEqual("");
   });
 
   it("should be able to use the mapOrElse operator", () => {
     const f = (n: number) => n.toString();
     const e = () => "2";
 
-    expect(some().mapOrElse(e, f)).toBeSome("1");
-    expect(none.mapOrElse(e, f)).toBeSome("2");
+    expect(some().mapOrElse(e, f)).toEqual("1");
+    expect(none.mapOrElse(e, f)).toEqual("2");
   });
 
   it("should be able to use the okOr operator", () => {
@@ -126,13 +127,13 @@ describe("Option", () => {
   });
 
   it("should be able to use the unwrapOr operator", () => {
-    expect(some().unwrapOr(2)).toBeSome(1);
-    expect(none.unwrapOr(2)).toBeSome(2);
+    expect(some().unwrapOr(2)).toEqual(1);
+    expect(none.unwrapOr(2)).toEqual(2);
   });
 
   it("should be able to use the unwrapOrElse operator", () => {
     const f = () => 2;
-    expect(some().unwrapOrElse(f)).toBeSome(1);
-    expect(none.unwrapOrElse(f)).toBeSome(2);
+    expect(some().unwrapOrElse(f)).toEqual(1);
+    expect(none.unwrapOrElse(f)).toEqual(2);
   });
 });

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { Result } from "../src/result";
+import { Err, Ok, Result } from "../src/result";
+import { toAsyncResult, toResult } from "../src/result/util";
 import { raise } from "../src/util";
 
-const ok = (num = 1): Result<number, string> => Result.ok(num);
-const err = (str = "foo"): Result<number, string> => Result.err(str);
+const ok = (num = 1): Result<number, string> => Ok(num);
+const err = (str = "foo"): Result<number, string> => Err(str);
 
 describe("Result", () => {
   it("should be able to check if it is ok", () => {
@@ -127,25 +128,25 @@ describe("Result", () => {
   });
 
   it("should be able to use the and operator", () => {
-    expect(ok().and(Result.ok(4))).toBeOk(4);
-    expect(err().and(Result.ok(4))).toBeErr();
+    expect(ok().and(Ok(4))).toBeOk(4);
+    expect(err().and(Ok(4))).toBeErr();
   });
 
   it("should be able to use the andThen operator", () => {
-    const f = () => Result.ok(4);
+    const f = () => Ok(4);
     expect(ok().andThen(f)).toBeOk(4);
     expect(err().andThen(f)).toBeErr();
   });
 
   it("should be able to use the or operator", () => {
-    expect(ok().or(Result.ok(4))).toBeOk(1);
-    expect(err().or(Result.ok(4))).toBeOk(4);
-    expect(err().or(Result.err("bar"))).toBeErr("bar");
+    expect(ok().or(Ok(4))).toBeOk(1);
+    expect(err().or(Ok(4))).toBeOk(4);
+    expect(err().or(Err("bar"))).toBeErr("bar");
   });
 
   it("should be able to use the orElse operator", () => {
-    const f1 = () => Result.err("bar");
-    const f2 = () => Result.ok(4);
+    const f1 = () => Err("bar");
+    const f2 = () => Ok(4);
     expect(ok().orElse(f1)).toBeOk(1);
     expect(err().orElse(f2)).toBeOk(4);
     expect(err().orElse(f1)).toBeErr("bar");
@@ -165,17 +166,17 @@ describe("Result", () => {
   it("should be able to convert a function that throws into a result", () => {
     const f1 = () => raise("foo");
     const f2 = () => 0;
-    expect(Result.from(f1)).toBeErr();
-    expect(Result.from(f2)).toBeOk(0);
+    expect(toResult(f1)).toBeErr();
+    expect(toResult(f2)).toBeOk(0);
   });
 
   it("should be able to convert an async function / promise into a result", async () => {
     const f1 = () => Promise.reject("foo");
     const f2 = () => Promise.resolve(0);
 
-    expect(await Result.fromAsync(f1)).toBeErr("foo");
-    expect(await Result.fromAsync(f2)).toBeOk(0);
-    expect(await Result.fromAsync(Promise.reject("foo"))).toBeErr("foo");
-    expect(await Result.fromAsync(Promise.resolve(0))).toBeOk(0);
+    expect(await toAsyncResult(f1)).toBeErr("foo");
+    expect(await toAsyncResult(f2)).toBeOk(0);
+    expect(await toAsyncResult(Promise.reject("foo"))).toBeErr("foo");
+    expect(await toAsyncResult(Promise.resolve(0))).toBeOk(0);
   });
 });

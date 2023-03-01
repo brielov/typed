@@ -78,12 +78,13 @@ export function isIterable(value: unknown): value is Iterable<unknown> {
   return Symbol.iterator in obj && isFunction(obj[Symbol.iterator]);
 }
 
-export function isAsyncIterable(
-  value: unknown,
-): value is AsyncIterable<unknown> {
-  if (isNil(value)) return false;
-  const obj = Object(value);
-  return Symbol.asyncIterator in obj && isFunction(obj[Symbol.asyncIterator]);
+export function isPromise(value: unknown): value is Promise<unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "then" in value &&
+    isFunction(value.then)
+  );
 }
 
 export function isPresent<T>(value: Maybe<T>): value is T {

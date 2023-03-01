@@ -2,7 +2,7 @@
 import { expect } from "vitest";
 import { isOption } from "../src/option";
 import { isResult } from "../src/result";
-import { isNil, isPresent } from "../src/type-guards";
+import { isUndefined } from "../src/type-guards";
 
 interface CustomMatchers<R = unknown> {
   toBeSome(expected?: unknown): R;
@@ -25,10 +25,8 @@ expect.extend({
   toBeSome(recieved, expected) {
     const pass =
       isOption(recieved) &&
-      isPresent((recieved as any).value) &&
-      isPresent(expected)
-        ? this.equals((recieved as any).value, expected)
-        : true;
+      recieved.isSome() &&
+      (isUndefined(expected) || this.equals(recieved.unwrap(), expected));
 
     return {
       pass,
@@ -36,7 +34,7 @@ expect.extend({
     };
   },
   toBeNone(recieved) {
-    const pass = isOption(recieved) && isNil((recieved as any).value);
+    const pass = isOption(recieved) && recieved.isNone();
 
     return {
       pass,
@@ -44,11 +42,10 @@ expect.extend({
     };
   },
   toBeOk(recieved, expected) {
-    const matches = isPresent(expected)
-      ? this.equals((recieved as any).value, expected)
-      : true;
-
-    const pass = isResult(recieved) && (recieved as any)._ok && matches;
+    const pass =
+      isResult(recieved) &&
+      recieved.isOk() &&
+      (isUndefined(expected) || this.equals(recieved.unwrap(), expected));
 
     return {
       pass,
@@ -56,11 +53,10 @@ expect.extend({
     };
   },
   toBeErr(recieved, expected) {
-    const matches = isPresent(expected)
-      ? this.equals((recieved as any).value, expected)
-      : true;
-
-    const pass = isResult(recieved) && !(recieved as any)._ok && matches;
+    const pass =
+      isResult(recieved) &&
+      recieved.isErr() &&
+      (isUndefined(expected) || this.equals(recieved.unwrapErr(), expected));
 
     return {
       pass,

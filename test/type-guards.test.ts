@@ -14,6 +14,7 @@ import {
   isPlainObject,
   isPresent,
   isPrimitive,
+  isPromise,
   isRegExp,
   isSet,
   isString,
@@ -34,6 +35,7 @@ const DATA_TYPES = {
   nullobject: Object.create(null),
   number: 10,
   object: {},
+  promise: Promise.resolve(0),
   regexp: new RegExp("lorem ipsum"),
   set: new Set(),
   string: "lorem ipsum",
@@ -87,6 +89,7 @@ t(isMap, ["map"]);
 t(isSet, ["set"]);
 t(isPlainObject, ["object", "nullobject"]);
 t(isIterable, ["string", "array", "map", "set"]);
+t(isPromise, ["promise"]);
 
 t(isPrimitive, [
   "string",

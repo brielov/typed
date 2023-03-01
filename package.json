@@ -1,9 +1,10 @@
 {
   "name": "typed",
-  "version": "10.0.0",
+  "version": "10.0.0-beta.0",
   "main": "dist/typed.js",
   "module": "dist/typed.mjs",
-  "types": "module",
+  "types": "dist/index.d.ts",
+  "type": "module",
   "private": false,
   "exports": {
     ".": {

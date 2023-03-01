@@ -1,6 +1,6 @@
 {
   "name": "typed",
-  "version": "10.0.0-beta.1",
+  "version": "10.0.0-beta.2",
   "main": "dist/typed.js",
   "module": "dist/typed.mjs",
   "types": "dist/index.d.ts",
@@ -17,11 +17,11 @@
     "dist"
   ],
   "scripts": {
-    "build": "vite build",
+    "build": "rimraf dist && vite build",
     "test": "vitest run",
     "dev": "vitest",
     "lint": "tsc",
-    "prepublish": "npm run build"
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
     "eslint-config-prettier": "^8.6.0",
     "eslint-plugin-prettier": "^4.2.1",
     "prettier": "^2.8.4",
+    "rimraf": "^4.1.2",
     "typescript": "^4.9.5",
     "vite": "^4.1.4",
     "vite-plugin-dts": "^2.0.0-beta.3",

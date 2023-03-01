@@ -73,7 +73,7 @@
     "happy-dom": "^4.0.1",
     "husky": "^8.0.1",
     "is-ci": "^3.0.1",
-    "lint-staged": "^12.4.1",
+    "lint-staged": "^13.1.2",
     "pinst": "^3.0.0",
     "prettier": "^2.6.2",
     "superstruct": "^0.15.4",

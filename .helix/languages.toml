@@ -1,0 +1,9 @@
+[language-server.deno-ls]
+command = "deno"
+args = ["lsp"]
+config = { enable = true, unstable = true }
+
+[[language]]
+name = "typescript"
+language-servers = ["deno-ls"]
+auto-format = true

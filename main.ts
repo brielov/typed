@@ -1,9 +1,9 @@
-type Ok<T> = { readonly ok: true; readonly value: T };
-type Err<E> = { readonly ok: false; readonly error: E };
-type Result<T, E> = Ok<T> | Err<E>;
+export type Ok<T> = { readonly ok: true; readonly value: T };
+export type Err<E> = { readonly ok: false; readonly error: E };
+export type Result<T, E> = Ok<T> | Err<E>;
 
-const Ok = <T,>(value: T): Ok<T> => ({ ok: true, value });
-const Err = <E,>(error: E): Err<E> => ({ ok: false, error });
+export const Ok = <T,>(value: T): Ok<T> => ({ ok: true, value });
+export const Err = <E,>(error: E): Err<E> => ({ ok: false, error });
 
 export type ParseError = {
   path: string[];
@@ -168,6 +168,13 @@ export const maybe = <T,>(schema: Schema<T>): Schema<T | null | undefined> => ({
   parse: (input) => (isNil(input) ? Ok(input) : schema.parse(input)),
 });
 
+type GetValue<T> = T | (() => T);
+
+type AnyFunc = (...args: unknown[]) => unknown;
+
+const isFunction = (input: unknown): input is AnyFunc =>
+  typeof input === "function";
+
 /**
  * Creates a schema with a default value.
  * If the input is null or undefined, the default value is used.
@@ -175,9 +182,18 @@ export const maybe = <T,>(schema: Schema<T>): Schema<T | null | undefined> => ({
  * @param fallback - The default value to use when the input is null or undefined.
  * @returns A new schema with default value handling.
  */
-export const withDefault = <T,>(schema: Schema<T>, fallback: T): Schema<T> => ({
+export const withDefault = <T,>(
+  schema: Schema<T>,
+  fallback: GetValue<T>,
+): Schema<T> => ({
   ...schema,
-  parse: (input) => (isNil(input) ? Ok(fallback) : schema.parse(input)),
+  parse: (input) => {
+    if (isNil(input)) {
+      const defaultValue = isFunction(fallback) ? fallback() : fallback;
+      return Ok(defaultValue);
+    }
+    return schema.parse(input);
+  },
 });
 
 /**
@@ -226,7 +242,7 @@ export const extend = <
  */
 export const tuple = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
   schemas: [A, ...B],
-  message = `Expecting array`,
+  message = `Expected array`,
 ): Schema<InferTuple<[A, ...B]>> => ({
   name: `[${schemas.map((s) => s.name).join(", ")}]`,
   parse: (input) => {
@@ -406,7 +422,7 @@ const UUID_REGEX =
  */
 export const uuid = <T extends string>(
   schema: Schema<T>,
-  message = "Expected a valid UUID",
+  message = "Expected valid uuid",
 ): Schema<T> => refine(schema, (s) => UUID_REGEX.test(s), message);
 
 /**
@@ -417,7 +433,7 @@ export const uuid = <T extends string>(
  */
 export const int = <T extends number>(
   schema: Schema<T>,
-  message = "Expecting number to be an integer",
+  message = "Expected number to be an integer",
 ) => refine(schema, (x) => Number.isInteger(x), message);
 
 /**
@@ -511,7 +527,7 @@ export function min(
   // deno-lint-ignore no-explicit-any
   schema: Schema<any>,
   value: number | Date,
-  message = `Expected value to be greater than ${value}`,
+  message = `Expected value to be at least ${value}`,
 ) {
   return refine(
     schema,
@@ -570,7 +586,7 @@ export function max(
   // deno-lint-ignore no-explicit-any
   schema: Schema<any>,
   value: number | Date,
-  message = `Expected value to be lower than ${value}`,
+  message = `Expected value to be at most ${value}`,
 ) {
   return refine(
     schema,
@@ -586,4 +602,20 @@ export function max(
 export const unknown = (): Schema<unknown> => ({
   name: "unknown",
   parse: Ok,
+});
+
+/**
+ * Creates a schema for validating values that must be equal to a specified literal constant.
+ * @param constant - The literal constant value that input must match.
+ * @param message - Custom error message to be used when the validation fails.
+ * @returns A schema for validating literal constants.
+ * @template T - The type of the literal constant.
+ */
+export const literal = <T extends number | string | boolean | null>(
+  constant: T,
+  message = `Expected value to be ${constant}`,
+): Schema<T> => ({
+  name: "literal",
+  parse: (input) =>
+    Object.is(constant, input) ? Ok(input as T) : fail(message, input),
 });

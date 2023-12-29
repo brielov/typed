@@ -270,3 +270,18 @@ Deno.test("literal", () => {
     message: "Expected value to be null",
   });
 });
+
+Deno.test("trim", () => {
+  const s = t.trim(t.str());
+  assertOk(s.parse("  hello  "), "hello");
+});
+
+Deno.test("lower", () => {
+  const s = t.lower(t.str());
+  assertOk(s.parse("HELLO"), "hello");
+});
+
+Deno.test("upper", () => {
+  const s = t.upper(t.str());
+  assertOk(s.parse("hello"), "HELLO");
+});

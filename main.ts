@@ -270,6 +270,7 @@ export const tuple = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
 export const pick = <T extends PlainObject, K extends keyof T>(
   schema: ObjectSchema<T>,
   keys: readonly K[],
+  message?: string,
 ): ObjectSchema<Pretty<Pick<T, K>>> => {
   const newShape = Object.create(null);
   for (const key in schema.shape) {
@@ -277,7 +278,7 @@ export const pick = <T extends PlainObject, K extends keyof T>(
       newShape[key] = schema.shape[key];
     }
   }
-  return struct(newShape);
+  return struct(newShape, message);
 };
 
 /**
@@ -289,6 +290,7 @@ export const pick = <T extends PlainObject, K extends keyof T>(
 export const omit = <T extends PlainObject, K extends keyof T>(
   schema: ObjectSchema<T>,
   keys: readonly K[],
+  message?: string,
 ): ObjectSchema<Pretty<Omit<T, K>>> => {
   const newShape = Object.create(null);
   for (const key in schema.shape) {
@@ -296,7 +298,7 @@ export const omit = <T extends PlainObject, K extends keyof T>(
       newShape[key] = schema.shape[key];
     }
   }
-  return struct(newShape);
+  return struct(newShape, message);
 };
 
 /**
@@ -619,3 +621,27 @@ export const literal = <T extends number | string | boolean | null>(
   parse: (input) =>
     Object.is(constant, input) ? Ok(input as T) : fail(message, input),
 });
+
+/**
+ * Creates a schema for trimming whitespace from a string value.
+ * @param schema - The original schema for a string.
+ * @returns A schema for a trimmed string.
+ */
+export const trim = (schema: Schema<string>): Schema<string> =>
+  transform(schema, (x) => x.trim());
+
+/**
+ * Creates a schema for converting a string value to lowercase.
+ * @param schema - The original schema for a string.
+ * @returns A schema for a lowercase string.
+ */
+export const lower = (schema: Schema<string>): Schema<string> =>
+  transform(schema, (x) => x.toLowerCase());
+
+/**
+ * Creates a schema for converting a string value to uppercase.
+ * @param schema - The original schema for a string.
+ * @returns A schema for an uppercase string.
+ */
+export const upper = (schema: Schema<string>): Schema<string> =>
+  transform(schema, (x) => x.toUpperCase());

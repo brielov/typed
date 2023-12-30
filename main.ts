@@ -46,14 +46,14 @@ const isPlainObject = (input: unknown): input is PlainObject => {
 };
 
 export interface Schema<T> {
-  name: string;
+  readonly name: string;
   parse(input: unknown): Result<T, ParseError>;
 }
 
 type Shape<T extends PlainObject> = { [K in keyof T]: Schema<T[K]> };
 
 export interface ObjectSchema<T extends PlainObject> extends Schema<T> {
-  shape: Shape<T>;
+  readonly shape: Shape<T>;
 }
 
 /**
@@ -131,6 +131,14 @@ export const vec = <T,>(
   },
 });
 
+const getStructName = <T extends PlainObject>(shape: Shape<T>): string => {
+  let str = "{";
+  for (const key in shape) {
+    str += ` ${key}: ${shape[key].name};`;
+  }
+  return str + " }";
+};
+
 /**
  * Creates a schema for validating objects with a specific shape.
  * @param shape - The shape of the object, where each key is associated with a schema.
@@ -142,7 +150,7 @@ export const struct = <T extends PlainObject>(
   message = "Expected object",
 ): ObjectSchema<T> => ({
   shape,
-  name: "object",
+  name: `object<${getStructName(shape)}>`,
   parse: (input) => {
     if (!isPlainObject(input)) return fail(message, input);
     const obj = Object.create(null);
@@ -165,6 +173,7 @@ export const struct = <T extends PlainObject>(
  */
 export const maybe = <T,>(schema: Schema<T>): Schema<T | null | undefined> => ({
   ...schema,
+  name: `maybe<${schema.name}>`,
   parse: (input) => (isNil(input) ? Ok(input) : schema.parse(input)),
 });
 
@@ -203,7 +212,7 @@ export const withDefault = <T,>(
  * @returns A schema that allows values conforming to any of the specified schemas.
  */
 export const either = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
-  schemas: [A, ...B],
+  schemas: readonly [A, ...B],
   message = `Expected either ${schemas.map((s) => s.name).join(" | ")}`,
 ): Schema<Infer<A> | Infer<B[number]>> => ({
   name: `${schemas.map((s) => s.name).join(" | ")}`,
@@ -227,7 +236,7 @@ export const extend = <
   A extends ObjectSchema<PlainObject>,
   B extends ObjectSchema<PlainObject>[],
 >(
-  schemas: [A, ...B],
+  schemas: readonly [A, ...B],
   message?: string,
 ): ObjectSchema<Pretty<UnionToIntersection<Infer<A> | Infer<B[number]>>>> => {
   const newShape = Object.assign({}, ...schemas.map((s) => s.shape));
@@ -241,7 +250,7 @@ export const extend = <
  * @returns A schema for validating arrays with a specified tuple structure.
  */
 export const tuple = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
-  schemas: [A, ...B],
+  schemas: readonly [A, ...B],
   message = `Expected array`,
 ): Schema<InferTuple<[A, ...B]>> => ({
   name: `[${schemas.map((s) => s.name).join(", ")}]`,
@@ -617,7 +626,7 @@ export const literal = <T extends number | string | boolean | null>(
   constant: T,
   message = `Expected value to be ${constant}`,
 ): Schema<T> => ({
-  name: "literal",
+  name: `literal<${constant}>`,
   parse: (input) =>
     Object.is(constant, input) ? Ok(input as T) : fail(message, input),
 });

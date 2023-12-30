@@ -404,7 +404,12 @@ export const coerce = <T extends string | number | boolean | Date>(
 export const unsafeParse = <T,>(schema: Schema<T>, input: unknown): T => {
   const result = schema.parse(input);
   if (!result.ok) {
-    throw new Error(result.error.message);
+    const path = result.error.path.join(".");
+    let message = result.error.message;
+    if (path.length) {
+      message += ` at path: "${path}"`;
+    }
+    throw new Error(message);
   }
   return result.value;
 };

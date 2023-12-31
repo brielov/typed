@@ -167,14 +167,16 @@ export const struct = <T extends PlainObject>(
 });
 
 /**
- * Creates a schema for values that can be either of the specified type or null/undefined.
- * @param schema - The original schema.
- * @returns A schema for values that can be either of the specified type or null/undefined.
+ * Creates a schema that handles values of the specified type or undefined.
+ * During parsing, both null and undefined are considered nil or nullish and are treated the same way.
+ * The resulting schema only outputs the specified type or undefined, disregarding null.
+ * @param schema - The original schema for values of the specified type.
+ * @returns A schema for values that can be either of the specified type or undefined.
  */
-export const maybe = <T,>(schema: Schema<T>): Schema<T | null | undefined> => ({
+export const maybe = <T,>(schema: Schema<T>): Schema<T | undefined> => ({
   ...schema,
   name: `maybe<${schema.name}>`,
-  parse: (input) => (isNil(input) ? Ok(input) : schema.parse(input)),
+  parse: (input) => (isNil(input) ? Ok(undefined) : schema.parse(input)),
 });
 
 type GetValue<T> = T | (() => T);

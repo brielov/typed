@@ -2,8 +2,12 @@ export type Ok<T> = { readonly ok: true; readonly value: T };
 export type Err<E> = { readonly ok: false; readonly error: E };
 export type Result<T, E> = Ok<T> | Err<E>;
 
-export const Ok = <T,>(value: T): Ok<T> => ({ ok: true, value });
-export const Err = <E,>(error: E): Err<E> => ({ ok: false, error });
+export function Ok<T>(value: T): Ok<T> {
+  return { ok: true, value };
+}
+export function Err<E>(error: E): Err<E> {
+  return { ok: false, error };
+}
 
 export type ParseError = {
   path: string[];
@@ -29,21 +33,23 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 
 type PlainObject = { [key: PropertyKey]: unknown };
 
-const fail = (message: string, input: unknown): Err<ParseError> =>
-  Err({
+function fail(message: string, input: unknown): Err<ParseError> {
+  return Err({
     path: [],
     message,
     input,
   });
+}
 
-const isNil = (input: unknown): input is null | undefined =>
-  typeof input === "undefined" || input === null;
+function isNil(input: unknown): input is null | undefined {
+  return typeof input === "undefined" || input === null;
+}
 
-const isPlainObject = (input: unknown): input is PlainObject => {
+function isPlainObject(input: unknown): input is PlainObject {
   if (isNil(input)) return false;
   const proto = Object.getPrototypeOf(input);
   return proto === null || proto === Object.prototype;
-};
+}
 
 export interface Schema<T> {
   readonly name: string;
@@ -61,48 +67,68 @@ export interface ObjectSchema<T extends PlainObject> extends Schema<T> {
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for strings.
  */
-export const str = (message = "Expected string"): Schema<string> => ({
-  name: "string",
-  parse: (input) =>
-    typeof input === "string" ? Ok(input) : fail(message, input),
-});
+export function str(message = "Expected string"): Schema<string> {
+  return {
+    name: "string",
+    parse: (input) => {
+      if (typeof input === "string") {
+        return Ok(input);
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Creates a schema for validating numbers.
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for numbers.
  */
-export const num = (message = "Expected number"): Schema<number> => ({
-  name: "number",
-  parse: (input) =>
-    typeof input === "number" && Number.isFinite(input)
-      ? Ok(input)
-      : fail(message, input),
-});
+export function num(message = "Expected number"): Schema<number> {
+  return {
+    name: "number",
+    parse: (input) => {
+      if (typeof input === "number" && Number.isFinite(input)) {
+        return Ok(input);
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Creates a schema for validating booleans.
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for booleans.
  */
-export const bool = (message = "Expected boolean"): Schema<boolean> => ({
-  name: "boolean",
-  parse: (input) =>
-    typeof input === "boolean" ? Ok(input) : fail(message, input),
-});
+export function bool(message = "Expected boolean"): Schema<boolean> {
+  return {
+    name: "boolean",
+    parse: (input) => {
+      if (typeof input === "boolean") {
+        return Ok(input);
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Creates a schema for validating dates.
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for dates.
  */
-export const date = (message = "Expected date"): Schema<Date> => ({
-  name: "date",
-  parse: (input) =>
-    input instanceof Date && Number.isFinite(input.getTime())
-      ? Ok(new Date(input))
-      : fail(message, input),
-});
+export function date(message = "Expected date"): Schema<Date> {
+  return {
+    name: "date",
+    parse: (input) => {
+      if (input instanceof Date && Number.isFinite(input.getTime())) {
+        return Ok(new Date(input));
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Creates a schema for validating arrays.
@@ -110,34 +136,35 @@ export const date = (message = "Expected date"): Schema<Date> => ({
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for arrays.
  */
-export const vec = <T,>(
+export function vec<T>(
   schema: Schema<T>,
   message = "Expected array",
-): Schema<T[]> => ({
-  ...schema,
-  name: `array<${schema.name}>`,
-  parse: (input) => {
-    if (!Array.isArray(input)) return fail(message, input);
-    const arr = Array(input.length);
-    for (let i = 0; i < input.length; i++) {
-      const result = schema.parse(input[i]);
-      if (!result.ok) {
-        result.error.path.unshift(i.toString());
-        return result;
+): Schema<T[]> {
+  return {
+    name: `array<${schema.name}>`,
+    parse: (input) => {
+      if (!Array.isArray(input)) return fail(message, input);
+      const arr = Array(input.length);
+      for (let i = 0; i < input.length; i++) {
+        const result = schema.parse(input[i]);
+        if (!result.ok) {
+          result.error.path.unshift(i.toString());
+          return result;
+        }
+        arr[i] = result.value;
       }
-      arr[i] = result.value;
-    }
-    return Ok(arr);
-  },
-});
+      return Ok(arr);
+    },
+  };
+}
 
-const getStructName = <T extends PlainObject>(shape: Shape<T>): string => {
+function getStructName<T extends PlainObject>(shape: Shape<T>): string {
   let str = "{";
   for (const key in shape) {
     str += ` ${key}: ${shape[key].name};`;
   }
   return str + " }";
-};
+}
 
 /**
  * Creates a schema for validating objects with a specific shape.
@@ -145,26 +172,28 @@ const getStructName = <T extends PlainObject>(shape: Shape<T>): string => {
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for objects with a specified shape.
  */
-export const struct = <T extends PlainObject>(
+export function struct<T extends PlainObject>(
   shape: Shape<T>,
   message = "Expected object",
-): ObjectSchema<T> => ({
-  shape,
-  name: `object<${getStructName(shape)}>`,
-  parse: (input) => {
-    if (!isPlainObject(input)) return fail(message, input);
-    const obj = Object.create(null);
-    for (const key in shape) {
-      const result = shape[key].parse(input[key]);
-      if (!result.ok) {
-        result.error.path.unshift(key);
-        return result;
+): ObjectSchema<T> {
+  return {
+    shape,
+    name: `object<${getStructName(shape)}>`,
+    parse: (input) => {
+      if (!isPlainObject(input)) return fail(message, input);
+      const obj = Object.create(null);
+      for (const key in shape) {
+        const result = shape[key].parse(input[key]);
+        if (!result.ok) {
+          result.error.path.unshift(key);
+          return result;
+        }
+        obj[key] = result.value;
       }
-      obj[key] = result.value;
-    }
-    return Ok(obj);
-  },
-});
+      return Ok(obj);
+    },
+  };
+}
 
 /**
  * Creates a schema that handles values of the specified type or undefined.
@@ -173,18 +202,21 @@ export const struct = <T extends PlainObject>(
  * @param schema - The original schema for values of the specified type.
  * @returns A schema for values that can be either of the specified type or undefined.
  */
-export const maybe = <T,>(schema: Schema<T>): Schema<T | undefined> => ({
-  ...schema,
-  name: `maybe<${schema.name}>`,
-  parse: (input) => (isNil(input) ? Ok(undefined) : schema.parse(input)),
-});
+export function maybe<T>(schema: Schema<T>): Schema<T | undefined> {
+  return {
+    ...schema,
+    name: `maybe<${schema.name}>`,
+    parse: (input) => (isNil(input) ? Ok(undefined) : schema.parse(input)),
+  };
+}
 
 type GetValue<T> = T | (() => T);
 
 type AnyFunc = (...args: unknown[]) => unknown;
 
-const isFunction = (input: unknown): input is AnyFunc =>
-  typeof input === "function";
+function isFunction(input: unknown): input is AnyFunc {
+  return typeof input === "function";
+}
 
 /**
  * Creates a schema with a default value.
@@ -193,19 +225,21 @@ const isFunction = (input: unknown): input is AnyFunc =>
  * @param fallback - The default value to use when the input is null or undefined.
  * @returns A new schema with default value handling.
  */
-export const withDefault = <T,>(
+export function withDefault<T>(
   schema: Schema<T>,
   fallback: GetValue<T>,
-): Schema<T> => ({
-  ...schema,
-  parse: (input) => {
-    if (isNil(input)) {
-      const defaultValue = isFunction(fallback) ? fallback() : fallback;
-      return Ok(defaultValue);
-    }
-    return schema.parse(input);
-  },
-});
+): Schema<T> {
+  return {
+    ...schema,
+    parse: (input) => {
+      if (isNil(input)) {
+        const defaultValue = isFunction(fallback) ? fallback() : fallback;
+        return Ok(defaultValue);
+      }
+      return schema.parse(input);
+    },
+  };
+}
 
 /**
  * Creates a schema that allows values conforming to any of the specified schemas.
@@ -213,20 +247,22 @@ export const withDefault = <T,>(
  * @param message - Custom error message to be used when none of the schemas match.
  * @returns A schema that allows values conforming to any of the specified schemas.
  */
-export const either = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
+export function either<A extends Schema<unknown>, B extends Schema<unknown>[]>(
   schemas: readonly [A, ...B],
   message = `Expected either ${schemas.map((s) => s.name).join(" | ")}`,
-): Schema<Infer<A> | Infer<B[number]>> => ({
-  name: `${schemas.map((s) => s.name).join(" | ")}`,
-  parse: (input) => {
-    for (const schema of schemas) {
-      const result = schema.parse(input);
-      // deno-lint-ignore no-explicit-any
-      if (result.ok) return result as any;
-    }
-    return fail(message, input);
-  },
-});
+): Schema<Infer<A> | Infer<B[number]>> {
+  return {
+    name: `${schemas.map((s) => s.name).join(" | ")}`,
+    parse: (input) => {
+      for (const schema of schemas) {
+        const result = schema.parse(input);
+        // deno-lint-ignore no-explicit-any
+        if (result.ok) return result as any;
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Extends multiple object schemas into a new object schema with a merged shape.
@@ -234,16 +270,16 @@ export const either = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
  * @param message - Custom error message to be used when the validation fails.
  * @returns A new object schema with a merged shape.
  */
-export const extend = <
+export function extend<
   A extends ObjectSchema<PlainObject>,
   B extends ObjectSchema<PlainObject>[],
 >(
   schemas: readonly [A, ...B],
   message?: string,
-): ObjectSchema<Pretty<UnionToIntersection<Infer<A> | Infer<B[number]>>>> => {
+): ObjectSchema<Pretty<UnionToIntersection<Infer<A> | Infer<B[number]>>>> {
   const newShape = Object.assign({}, ...schemas.map((s) => s.shape));
   return struct(newShape, message);
-};
+}
 
 /**
  * Creates a schema for validating arrays with a specified tuple structure.
@@ -251,26 +287,28 @@ export const extend = <
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for validating arrays with a specified tuple structure.
  */
-export const tuple = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
+export function tuple<A extends Schema<unknown>, B extends Schema<unknown>[]>(
   schemas: readonly [A, ...B],
   message = `Expected array`,
-): Schema<InferTuple<[A, ...B]>> => ({
-  name: `[${schemas.map((s) => s.name).join(", ")}]`,
-  parse: (input) => {
-    if (!Array.isArray(input)) return fail(message, input);
-    const arr = Array(schemas.length);
-    for (let i = 0; i < schemas.length; i++) {
-      const result = schemas[i].parse(input[i]);
-      if (!result.ok) {
-        result.error.path.unshift(i.toString());
-        return result;
+): Schema<InferTuple<[A, ...B]>> {
+  return {
+    name: `[${schemas.map((s) => s.name).join(", ")}]`,
+    parse: (input) => {
+      if (!Array.isArray(input)) return fail(message, input);
+      const arr = Array(schemas.length);
+      for (let i = 0; i < schemas.length; i++) {
+        const result = schemas[i].parse(input[i]);
+        if (!result.ok) {
+          result.error.path.unshift(i.toString());
+          return result;
+        }
+        arr[i] = result.value;
       }
-      arr[i] = result.value;
-    }
-    // deno-lint-ignore no-explicit-any
-    return Ok(arr as any);
-  },
-});
+      // deno-lint-ignore no-explicit-any
+      return Ok(arr as any);
+    },
+  };
+}
 
 /**
  * Creates a schema for validating objects with a subset of keys.
@@ -278,11 +316,11 @@ export const tuple = <A extends Schema<unknown>, B extends Schema<unknown>[]>(
  * @param keys - An array of keys to include in the subset.
  * @returns A schema for objects with a subset of keys.
  */
-export const pick = <T extends PlainObject, K extends keyof T>(
+export function pick<T extends PlainObject, K extends keyof T>(
   schema: ObjectSchema<T>,
   keys: readonly K[],
   message?: string,
-): ObjectSchema<Pretty<Pick<T, K>>> => {
+): ObjectSchema<Pretty<Pick<T, K>>> {
   const newShape = Object.create(null);
   for (const key in schema.shape) {
     if (keys.includes(key as unknown as K)) {
@@ -290,7 +328,7 @@ export const pick = <T extends PlainObject, K extends keyof T>(
     }
   }
   return struct(newShape, message);
-};
+}
 
 /**
  * Creates a schema for validating objects with certain keys omitted.
@@ -298,11 +336,11 @@ export const pick = <T extends PlainObject, K extends keyof T>(
  * @param keys - An array of keys to omit from the object.
  * @returns A schema for objects with specified keys omitted.
  */
-export const omit = <T extends PlainObject, K extends keyof T>(
+export function omit<T extends PlainObject, K extends keyof T>(
   schema: ObjectSchema<T>,
   keys: readonly K[],
   message?: string,
-): ObjectSchema<Pretty<Omit<T, K>>> => {
+): ObjectSchema<Pretty<Omit<T, K>>> {
   const newShape = Object.create(null);
   for (const key in schema.shape) {
     if (!keys.includes(key as unknown as K)) {
@@ -310,7 +348,7 @@ export const omit = <T extends PlainObject, K extends keyof T>(
     }
   }
   return struct(newShape, message);
-};
+}
 
 /**
  * Creates a schema for transforming values using a provided function.
@@ -318,17 +356,19 @@ export const omit = <T extends PlainObject, K extends keyof T>(
  * @param f - The function to transform the value.
  * @returns A schema for transformed values.
  */
-export const transform = <T, U>(
+export function transform<T, U>(
   schema: Schema<T>,
   f: (value: T) => U,
-): Schema<U> => ({
-  ...schema,
-  parse: (input) => {
-    const result = schema.parse(input);
-    if (!result.ok) return result;
-    return Ok(f(result.value));
-  },
-});
+): Schema<U> {
+  return {
+    ...schema,
+    parse: (input) => {
+      const result = schema.parse(input);
+      if (!result.ok) return result;
+      return Ok(f(result.value));
+    },
+  };
+}
 
 /**
  * Creates a schema for validating values based on a custom condition.
@@ -337,20 +377,22 @@ export const transform = <T, U>(
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for values meeting a custom condition.
  */
-export const refine = <T,>(
+export function refine<T>(
   schema: Schema<T>,
   f: (value: T) => boolean,
   message: string,
-): Schema<T> => ({
-  ...schema,
-  parse: (input) => {
-    const result = schema.parse(input);
-    if (!result.ok) return result;
-    const { value } = result;
-    if (!f(value)) return fail(message, value);
-    return Ok(value);
-  },
-});
+): Schema<T> {
+  return {
+    ...schema,
+    parse: (input) => {
+      const result = schema.parse(input);
+      if (!result.ok) return result;
+      const { value } = result;
+      if (!f(value)) return fail(message, value);
+      return Ok(value);
+    },
+  };
+}
 
 /**
  * Creates a schema for coercing values to a specified type.
@@ -359,9 +401,9 @@ export const refine = <T,>(
  * @returns A schema for values coerced to the specified type.
  * @throws {Error} If the specified schema type cannot be coerced.
  */
-export const coerce = <T extends string | number | boolean | Date>(
+export function coerce<T extends string | number | boolean | Date>(
   schema: Schema<T>,
-): Schema<T> => {
+): Schema<T> {
   // deno-lint-ignore no-explicit-any
   let fn!: (input: any) => any;
 
@@ -394,7 +436,7 @@ export const coerce = <T extends string | number | boolean | Date>(
     ...schema,
     parse: (input) => schema.parse(fn(input)),
   };
-};
+}
 
 /**
  * Parses an unknown input using the specified schema, throwing an error if the validation fails.
@@ -403,7 +445,7 @@ export const coerce = <T extends string | number | boolean | Date>(
  * @returns The parsed value.
  * @throws {Error} If the input does not match the schema.
  */
-export const unsafeParse = <T,>(schema: Schema<T>, input: unknown): T => {
+export function unsafeParse<T>(schema: Schema<T>, input: unknown): T {
   const result = schema.parse(input);
   if (!result.ok) {
     const path = result.error.path.join(".");
@@ -414,7 +456,7 @@ export const unsafeParse = <T,>(schema: Schema<T>, input: unknown): T => {
     throw new Error(message);
   }
   return result.value;
-};
+}
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
@@ -424,10 +466,12 @@ const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for validating email addresses.
  */
-export const email = <T extends string>(
+export function email<T extends string>(
   schema: Schema<T>,
   message = `Expected valid email address`,
-) => refine(schema, (s) => EMAIL_REGEX.test(s), message);
+) {
+  return refine(schema, (s) => EMAIL_REGEX.test(s), message);
+}
 
 const UUID_REGEX =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -438,10 +482,12 @@ const UUID_REGEX =
  * @param message - Custom error message to be used when the validation fails.
  * @returns A new schema for UUID validation.
  */
-export const uuid = <T extends string>(
+export function uuid<T extends string>(
   schema: Schema<T>,
   message = "Expected valid uuid",
-): Schema<T> => refine(schema, (s) => UUID_REGEX.test(s), message);
+): Schema<T> {
+  return refine(schema, (s) => UUID_REGEX.test(s), message);
+}
 
 /**
  * Creates a schema for validating that a number is an integer.
@@ -449,10 +495,12 @@ export const uuid = <T extends string>(
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for validating integers.
  */
-export const int = <T extends number>(
+export function int<T extends number>(
   schema: Schema<T>,
   message = "Expected number to be an integer",
-) => refine(schema, (x) => Number.isInteger(x), message);
+) {
+  return refine(schema, (x) => Number.isInteger(x), message);
+}
 
 /**
  * Creates a schema for validating that a number is positive.
@@ -460,10 +508,12 @@ export const int = <T extends number>(
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for validating positive numbers.
  */
-export const positive = <T extends number>(
+export function positive<T extends number>(
   schema: Schema<T>,
   message = "Expected number to be positive",
-) => refine(schema, (x) => x > 0, message);
+) {
+  return refine(schema, (x) => x > 0, message);
+}
 
 /**
  * Creates a schema for validating that a number is negative.
@@ -471,10 +521,12 @@ export const positive = <T extends number>(
  * @param message - Custom error message to be used when the validation fails.
  * @returns A schema for validating negative numbers.
  */
-export const negative = <T extends number>(
+export function negative<T extends number>(
   schema: Schema<T>,
   message = "Expected number to be negative",
-) => refine(schema, (x) => x < 0, message);
+) {
+  return refine(schema, (x) => x < 0, message);
+}
 
 /**
  * Creates a schema for clamping a number within a specified range.
@@ -483,17 +535,19 @@ export const negative = <T extends number>(
  * @param max - The maximum value of the range.
  * @returns A schema for clamped numbers.
  */
-export const clamp = <T extends number>(
+export function clamp<T extends number>(
   schema: Schema<T>,
   min: number,
   max: number,
-) => transform(schema, (x) => Math.min(Math.max(x, min), max));
+) {
+  return transform(schema, (x) => Math.min(Math.max(x, min), max));
+}
 
-const toComparableInt = (input: number | string | Date) => {
+function toComparableInt(input: number | string | Date) {
   if (typeof input === "string") return input.length;
   if (typeof input === "number") return input;
   return input.getTime();
-};
+}
 
 /**
  * Creates a schema for validating that a numeric value is greater than or equal to a specified minimum.
@@ -617,10 +671,12 @@ export function max(
  * Creates a schema that accepts any value and marks it as unknown.
  * @returns A schema for any unknown value.
  */
-export const unknown = (): Schema<unknown> => ({
-  name: "unknown",
-  parse: Ok,
-});
+export function unknown(): Schema<unknown> {
+  return {
+    name: "unknown",
+    parse: Ok,
+  };
+}
 
 /**
  * Creates a schema for validating values that must be equal to a specified literal constant.
@@ -629,35 +685,44 @@ export const unknown = (): Schema<unknown> => ({
  * @returns A schema for validating literal constants.
  * @template T - The type of the literal constant.
  */
-export const literal = <T extends number | string | boolean | null>(
+export function literal<T extends number | string | boolean | null>(
   constant: T,
   message = `Expected value to be ${constant}`,
-): Schema<T> => ({
-  name: `literal<${constant}>`,
-  parse: (input) =>
-    Object.is(constant, input) ? Ok(input as T) : fail(message, input),
-});
+): Schema<T> {
+  return {
+    name: `literal<${constant}>`,
+    parse: (input) => {
+      if (Object.is(constant, input)) {
+        return Ok(input as T);
+      }
+      return fail(message, input);
+    },
+  };
+}
 
 /**
  * Creates a schema for trimming whitespace from a string value.
  * @param schema - The original schema for a string.
  * @returns A schema for a trimmed string.
  */
-export const trim = (schema: Schema<string>): Schema<string> =>
-  transform(schema, (x) => x.trim());
+export function trim(schema: Schema<string>): Schema<string> {
+  return transform(schema, (x) => x.trim());
+}
 
 /**
  * Creates a schema for converting a string value to lowercase.
  * @param schema - The original schema for a string.
  * @returns A schema for a lowercase string.
  */
-export const lower = (schema: Schema<string>): Schema<string> =>
-  transform(schema, (x) => x.toLowerCase());
+export function lower(schema: Schema<string>): Schema<string> {
+  return transform(schema, (x) => x.toLowerCase());
+}
 
 /**
  * Creates a schema for converting a string value to uppercase.
  * @param schema - The original schema for a string.
  * @returns A schema for an uppercase string.
  */
-export const upper = (schema: Schema<string>): Schema<string> =>
-  transform(schema, (x) => x.toUpperCase());
+export function upper(schema: Schema<string>): Schema<string> {
+  return transform(schema, (x) => x.toUpperCase());
+}

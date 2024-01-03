@@ -79,7 +79,7 @@ Deno.test("struct", () => {
 
 Deno.test("maybe", () => {
   const s = t.maybe(t.str());
-  assertOk(s.parse(null), null);
+  assertOk(s.parse(null), undefined);
   assertOk(s.parse(undefined), undefined);
   assertOk(s.parse("foo"), "foo");
   assertErr(s.parse(1), { message: "Expected string" });

@@ -265,12 +265,12 @@ export function either<A extends Schema<unknown>, B extends Schema<unknown>[]>(
 }
 
 /**
- * Extends multiple object schemas into a new object schema with a merged shape.
- * @param schemas - An array of object schemas to extend.
+ * Combines multiple object schemas into a new object schema with a merged shape.
+ * @param schemas - An array of object schemas to merge.
  * @param message - Custom error message to be used when the validation fails.
  * @returns A new object schema with a merged shape.
  */
-export function extend<
+export function merge<
   A extends ObjectSchema<PlainObject>,
   B extends ObjectSchema<PlainObject>[],
 >(

@@ -105,10 +105,10 @@ Deno.test("either", () => {
   });
 });
 
-Deno.test("extend", () => {
+Deno.test("merge", () => {
   const a = t.struct({ id: t.num() });
   const b = t.struct({ name: t.str() });
-  const c = t.extend([a, b]);
+  const c = t.merge([a, b]);
   assertErr(c.parse({ id: 1 }), { message: "Expected string", path: ["name"] });
   assertErr(c.parse({ name: "foo" }), {
     message: "Expected number",

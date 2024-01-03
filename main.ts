@@ -690,7 +690,7 @@ export function literal<T extends number | string | boolean | null>(
   message = `Expected value to be ${constant}`,
 ): Schema<T> {
   return {
-    name: `literal<${constant}>`,
+    name: `literal<${JSON.stringify(constant)}>`,
     parse: (input) => {
       if (Object.is(constant, input)) {
         return Ok(input as T);

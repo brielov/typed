@@ -601,11 +601,8 @@ export function min(
   value: number | Date,
   message = `Expected value to be at least ${value}`,
 ) {
-  return refine(
-    schema,
-    (x) => toComparableInt(x) >= toComparableInt(value),
-    message,
-  );
+  const min = toComparableInt(value);
+  return refine(schema, (x) => toComparableInt(x) >= min, message);
 }
 
 /**
@@ -660,11 +657,8 @@ export function max(
   value: number | Date,
   message = `Expected value to be at most ${value}`,
 ) {
-  return refine(
-    schema,
-    (x) => toComparableInt(x) <= toComparableInt(value),
-    message,
-  );
+  const max = toComparableInt(value);
+  return refine(schema, (x) => toComparableInt(x) <= max, message);
 }
 
 /**
